@@ -139,7 +139,13 @@ export async function handleApiRequest(
         .eq("username", username)
         .single();
 
-      if (staffErr || !staffMember) {
+      if (staffErr) {
+        console.error("[api] Supabase query error:", staffErr);
+        sendError(res, 500, `Database error: ${staffErr.message}`);
+        return true;
+      }
+
+      if (!staffMember) {
         sendError(res, 401, "Invalid username or password");
         return true;
       }
