@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { AuthSession, Booking, PetType, SessionHistory, Staff } from "../src/types";
 import { hashPassword, verifyAdminCredentials, verifyPassword } from "./auth";
-import { getDb } from "./db";
+import { getSupabase } from "./supabase";
 
 type StaffRow = {
   id: number;
@@ -9,6 +9,7 @@ type StaffRow = {
   role: string;
   busy_with: string | null;
   username: string;
+  password_hash?: string;
 };
 
 type BookingRow = {
@@ -20,30 +21,8 @@ type BookingRow = {
   time_range: string;
   staff_id: number | null;
   status: "Waiting" | "In-Progress";
+  checked_in_at?: string | null;
 };
-
-function mapStaff(row: StaffRow): Staff {
-  return {
-    id: row.id,
-    name: row.name,
-    role: row.role,
-    busyWith: row.busy_with,
-    username: row.username,
-  };
-}
-
-function findStaffByUsername(db: ReturnType<typeof getDb>, username: string) {
-  return db
-    .prepare("SELECT id, name, role, busy_with, username, password_hash FROM staff WHERE username = ?")
-    .get(username) as (StaffRow & { password_hash: string }) | undefined;
-}
-
-function usernameTaken(db: ReturnType<typeof getDb>, username: string, excludeId?: number) {
-  const existing = db
-    .prepare("SELECT id FROM staff WHERE username = ?")
-    .get(username) as { id: number } | undefined;
-  return existing !== undefined && existing.id !== excludeId;
-}
 
 type SessionHistoryRow = {
   id: number;
@@ -58,6 +37,16 @@ type SessionHistoryRow = {
   checked_out_at: string;
   amount: number;
 };
+
+function mapStaff(row: StaffRow): Staff {
+  return {
+    id: row.id,
+    name: row.name,
+    role: row.role,
+    busyWith: row.busy_with,
+    username: row.username,
+  };
+}
 
 function mapSessionHistory(row: SessionHistoryRow): SessionHistory {
   return {
@@ -118,11 +107,12 @@ export async function handleApiRequest(
 ): Promise<boolean> {
   if (!pathname.startsWith("/api/")) return false;
 
-  const db = getDb();
+  const db = getSupabase();
   const method = req.method ?? "GET";
-  const segments = pathname.split("/").filter(Boolean);
 
   try {
+    // ── Login ──────────────────────────────────────────────────────────────
+
     if (method === "POST" && pathname === "/api/login") {
       const body = await readJsonBody<{ username?: string; password?: string }>(req);
       const username = body.username?.trim() ?? "";
@@ -143,8 +133,18 @@ export async function handleApiRequest(
         return true;
       }
 
-      const staffMember = findStaffByUsername(db, username);
-      if (!staffMember || !verifyPassword(password, staffMember.password_hash)) {
+      const { data: staffMember, error: staffErr } = await db
+        .from("staff")
+        .select("id, name, role, busy_with, username, password_hash")
+        .eq("username", username)
+        .single();
+
+      if (staffErr || !staffMember) {
+        sendError(res, 401, "Invalid username or password");
+        return true;
+      }
+
+      if (!verifyPassword(password, staffMember.password_hash)) {
         sendError(res, 401, "Invalid username or password");
         return true;
       }
@@ -159,9 +159,16 @@ export async function handleApiRequest(
       return true;
     }
 
+    // ── Staff CRUD ─────────────────────────────────────────────────────────
+
     if (method === "GET" && pathname === "/api/staff") {
-      const rows = db.prepare("SELECT id, name, role, busy_with, username FROM staff ORDER BY id").all() as StaffRow[];
-      sendJson(res, 200, rows.map(mapStaff));
+      const { data, error } = await db
+        .from("staff")
+        .select("id, name, role, busy_with, username")
+        .order("id");
+
+      if (error) throw new Error(error.message);
+      sendJson(res, 200, (data as StaffRow[]).map(mapStaff));
       return true;
     }
 
@@ -178,20 +185,32 @@ export async function handleApiRequest(
         sendError(res, 400, "This username is reserved");
         return true;
       }
-      if (usernameTaken(db, username)) {
+
+      const { data: existing } = await db
+        .from("staff")
+        .select("id")
+        .eq("username", username)
+        .maybeSingle();
+
+      if (existing) {
         sendError(res, 409, "Username is already taken");
         return true;
       }
 
-      const result = db
-        .prepare("INSERT INTO staff (name, role, busy_with, username, password_hash) VALUES (?, ?, NULL, ?, ?)")
-        .run(body.name.trim(), body.role.trim(), username, hashPassword(body.password));
+      const { data: inserted, error: insertErr } = await db
+        .from("staff")
+        .insert({
+          name: body.name.trim(),
+          role: body.role.trim(),
+          busy_with: null,
+          username,
+          password_hash: hashPassword(body.password),
+        })
+        .select("id, name, role, busy_with, username")
+        .single();
 
-      const row = db
-        .prepare("SELECT id, name, role, busy_with, username FROM staff WHERE id = ?")
-        .get(Number(result.lastInsertRowid)) as StaffRow;
-
-      sendJson(res, 201, mapStaff(row));
+      if (insertErr) throw new Error(insertErr.message);
+      sendJson(res, 201, mapStaff(inserted as StaffRow));
       return true;
     }
 
@@ -207,9 +226,11 @@ export async function handleApiRequest(
           return true;
         }
 
-        const existing = db
-          .prepare("SELECT id FROM staff WHERE id = ?")
-          .get(staffId) as { id: number } | undefined;
+        const { data: existing } = await db
+          .from("staff")
+          .select("id")
+          .eq("id", staffId)
+          .maybeSingle();
 
         if (!existing) {
           sendError(res, 404, "Staff not found");
@@ -221,40 +242,51 @@ export async function handleApiRequest(
           sendError(res, 400, "This username is reserved");
           return true;
         }
-        if (usernameTaken(db, username, staffId)) {
+
+        const { data: taken } = await db
+          .from("staff")
+          .select("id")
+          .eq("username", username)
+          .neq("id", staffId)
+          .maybeSingle();
+
+        if (taken) {
           sendError(res, 409, "Username is already taken");
           return true;
         }
 
+        const updates: Record<string, unknown> = {
+          name: body.name.trim(),
+          role: body.role.trim(),
+          username,
+        };
         if (body.password) {
-          db.prepare("UPDATE staff SET name = ?, role = ?, username = ?, password_hash = ? WHERE id = ?").run(
-            body.name.trim(),
-            body.role.trim(),
-            username,
-            hashPassword(body.password),
-            staffId,
-          );
-        } else {
-          db.prepare("UPDATE staff SET name = ?, role = ?, username = ? WHERE id = ?").run(
-            body.name.trim(),
-            body.role.trim(),
-            username,
-            staffId,
-          );
+          updates.password_hash = hashPassword(body.password);
         }
 
-        const row = db
-          .prepare("SELECT id, name, role, busy_with, username FROM staff WHERE id = ?")
-          .get(staffId) as StaffRow;
+        const { error: updateErr } = await db
+          .from("staff")
+          .update(updates)
+          .eq("id", staffId);
 
-        sendJson(res, 200, mapStaff(row));
+        if (updateErr) throw new Error(updateErr.message);
+
+        const { data: row } = await db
+          .from("staff")
+          .select("id, name, role, busy_with, username")
+          .eq("id", staffId)
+          .single();
+
+        sendJson(res, 200, mapStaff(row as StaffRow));
         return true;
       }
 
       if (method === "DELETE") {
-        const existing = db
-          .prepare("SELECT id, busy_with FROM staff WHERE id = ?")
-          .get(staffId) as { id: number; busy_with: string | null } | undefined;
+        const { data: existing } = await db
+          .from("staff")
+          .select("id, busy_with")
+          .eq("id", staffId)
+          .single();
 
         if (!existing) {
           sendError(res, 404, "Staff not found");
@@ -266,20 +298,31 @@ export async function handleApiRequest(
           return true;
         }
 
-        const activeBooking = db
-          .prepare("SELECT id FROM bookings WHERE staff_id = ? AND status = 'In-Progress' LIMIT 1")
-          .get(staffId) as { id: number } | undefined;
+        const { data: activeBooking } = await db
+          .from("bookings")
+          .select("id")
+          .eq("staff_id", staffId)
+          .eq("status", "In-Progress")
+          .limit(1)
+          .maybeSingle();
 
         if (activeBooking) {
           sendError(res, 409, "Cannot remove staff with an active booking");
           return true;
         }
 
-        db.prepare("DELETE FROM staff WHERE id = ?").run(staffId);
+        const { error: deleteErr } = await db
+          .from("staff")
+          .delete()
+          .eq("id", staffId);
+
+        if (deleteErr) throw new Error(deleteErr.message);
         sendJson(res, 200, { ok: true });
         return true;
       }
     }
+
+    // ── Bookings CRUD ──────────────────────────────────────────────────────
 
     if (method === "GET" && pathname === "/api/bookings") {
       const url = new URL(req.url ?? "", "http://localhost");
@@ -287,29 +330,19 @@ export async function handleApiRequest(
       const endDate = url.searchParams.get("endDate");
       const date = url.searchParams.get("date");
 
-      let query: string;
-      let params: string[];
+      let query = db
+        .from("bookings")
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status");
 
       if (startDate && endDate) {
-        query = `
-          SELECT id, pet_name, pet_type, phone, date, time_range, staff_id, status
-          FROM bookings
-          WHERE date >= ? AND date <= ?
-          ORDER BY date, id
-        `;
-        params = [startDate, endDate];
+        query = query.gte("date", startDate).lte("date", endDate).order("date").order("id");
       } else {
-        query = `
-          SELECT id, pet_name, pet_type, phone, date, time_range, staff_id, status
-          FROM bookings
-          WHERE date = ?
-          ORDER BY id
-        `;
-        params = [date ?? todayISO()];
+        query = query.eq("date", date ?? todayISO()).order("id");
       }
 
-      const rows = db.prepare(query).all(...params) as BookingRow[];
-      sendJson(res, 200, rows.map(mapBooking));
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+      sendJson(res, 200, (data as BookingRow[]).map(mapBooking));
       return true;
     }
 
@@ -327,22 +360,22 @@ export async function handleApiRequest(
         return true;
       }
 
-      const result = db
-        .prepare(`
-          INSERT INTO bookings (pet_name, pet_type, phone, date, time_range, staff_id, status)
-          VALUES (?, ?, ?, ?, ?, NULL, 'Waiting')
-        `)
-        .run(body.petName.trim(), body.petType, body.phone?.trim() ?? "", body.date, body.timeRange);
+      const { data: inserted, error: insertErr } = await db
+        .from("bookings")
+        .insert({
+          pet_name: body.petName.trim(),
+          pet_type: body.petType,
+          phone: body.phone?.trim() ?? "",
+          date: body.date,
+          time_range: body.timeRange,
+          staff_id: null,
+          status: "Waiting",
+        })
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status")
+        .single();
 
-      const row = db
-        .prepare(`
-          SELECT id, pet_name, pet_type, phone, date, time_range, staff_id, status
-          FROM bookings
-          WHERE id = ?
-        `)
-        .get(Number(result.lastInsertRowid)) as BookingRow;
-
-      sendJson(res, 201, mapBooking(row));
+      if (insertErr) throw new Error(insertErr.message);
+      sendJson(res, 201, mapBooking(inserted as BookingRow));
       return true;
     }
 
@@ -357,9 +390,11 @@ export async function handleApiRequest(
         timeRange?: string;
       }>(req);
 
-      const existing = db
-        .prepare("SELECT id, status FROM bookings WHERE id = ?")
-        .get(bookingId) as { id: number; status: string } | undefined;
+      const { data: existing } = await db
+        .from("bookings")
+        .select("id, status")
+        .eq("id", bookingId)
+        .single();
 
       if (!existing) {
         sendError(res, 404, "Booking not found");
@@ -376,30 +411,30 @@ export async function handleApiRequest(
         return true;
       }
 
-      db.prepare(`
-        UPDATE bookings
-        SET pet_name = ?, pet_type = ?, phone = ?, date = ?, time_range = ?
-        WHERE id = ?
-      `).run(
-        body.petName.trim(),
-        body.petType,
-        body.phone?.trim() ?? "",
-        body.date,
-        body.timeRange,
-        bookingId,
-      );
+      const { error: updateErr } = await db
+        .from("bookings")
+        .update({
+          pet_name: body.petName.trim(),
+          pet_type: body.petType,
+          phone: body.phone?.trim() ?? "",
+          date: body.date,
+          time_range: body.timeRange,
+        })
+        .eq("id", bookingId);
 
-      const row = db
-        .prepare(`
-          SELECT id, pet_name, pet_type, phone, date, time_range, staff_id, status
-          FROM bookings
-          WHERE id = ?
-        `)
-        .get(bookingId) as BookingRow;
+      if (updateErr) throw new Error(updateErr.message);
 
-      sendJson(res, 200, mapBooking(row));
+      const { data: row } = await db
+        .from("bookings")
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status")
+        .eq("id", bookingId)
+        .single();
+
+      sendJson(res, 200, mapBooking(row as BookingRow));
       return true;
     }
+
+    // ── Check-in (via RPC) ─────────────────────────────────────────────────
 
     const checkinMatch = pathname.match(/^\/api\/bookings\/(\d+)\/checkin$/);
     if (method === "PATCH" && checkinMatch) {
@@ -411,57 +446,33 @@ export async function handleApiRequest(
         return true;
       }
 
-      const booking = db
-        .prepare("SELECT id, pet_name FROM bookings WHERE id = ?")
-        .get(bookingId) as { id: number; pet_name: string } | undefined;
+      const { data: result, error: rpcError } = await db.rpc("checkin_booking", {
+        p_booking_id: bookingId,
+        p_staff_id: body.staffId,
+      });
 
-      if (!booking) {
-        sendError(res, 404, "Booking not found");
-        return true;
+      if (rpcError) {
+        const msg = rpcError.message;
+        if (msg.includes("Booking not found")) {
+          sendError(res, 404, "Booking not found");
+          return true;
+        }
+        if (msg.includes("Staff not found")) {
+          sendError(res, 404, "Staff not found");
+          return true;
+        }
+        if (msg.includes("already busy")) {
+          sendError(res, 409, "Staff member is already busy");
+          return true;
+        }
+        throw new Error(msg);
       }
 
-      const staff = db
-        .prepare("SELECT id, busy_with FROM staff WHERE id = ?")
-        .get(body.staffId) as { id: number; busy_with: string | null } | undefined;
-
-      if (!staff) {
-        sendError(res, 404, "Staff not found");
-        return true;
-      }
-
-      if (staff.busy_with) {
-        sendError(res, 409, "Staff member is already busy");
-        return true;
-      }
-
-      const staffId = body.staffId;
-      const checkedInAt = new Date().toISOString();
-      db.exec("BEGIN");
-      try {
-        db.prepare(`
-          UPDATE bookings
-          SET status = 'In-Progress', staff_id = ?, checked_in_at = ?
-          WHERE id = ?
-        `).run(staffId, checkedInAt, bookingId);
-
-        db.prepare("UPDATE staff SET busy_with = ? WHERE id = ?").run(booking.pet_name, staffId);
-        db.exec("COMMIT");
-      } catch (error) {
-        db.exec("ROLLBACK");
-        throw error;
-      }
-
-      const row = db
-        .prepare(`
-          SELECT id, pet_name, pet_type, phone, date, time_range, staff_id, status
-          FROM bookings
-          WHERE id = ?
-        `)
-        .get(bookingId) as BookingRow;
-
-      sendJson(res, 200, mapBooking(row));
+      sendJson(res, 200, mapBooking(result as BookingRow));
       return true;
     }
+
+    // ── Checkout (via RPC) ─────────────────────────────────────────────────
 
     const checkoutMatch = pathname.match(/^\/api\/bookings\/(\d+)\/checkout$/);
     if (method === "POST" && checkoutMatch) {
@@ -473,75 +484,24 @@ export async function handleApiRequest(
         return true;
       }
 
-      const booking = db
-        .prepare(`
-          SELECT
-            b.id,
-            b.pet_name,
-            b.pet_type,
-            b.phone,
-            b.date,
-            b.time_range,
-            b.staff_id,
-            b.checked_in_at,
-            s.name AS staff_name
-          FROM bookings b
-          LEFT JOIN staff s ON s.id = b.staff_id
-          WHERE b.id = ?
-        `)
-        .get(bookingId) as {
-          id: number;
-          pet_name: string;
-          pet_type: PetType;
-          phone: string;
-          date: string;
-          time_range: string;
-          staff_id: number | null;
-          checked_in_at: string | null;
-          staff_name: string | null;
-        } | undefined;
+      const { data: result, error: rpcError } = await db.rpc("checkout_booking", {
+        p_booking_id: bookingId,
+        p_amount: body.amount,
+      });
 
-      if (!booking) {
-        sendError(res, 404, "Booking not found");
-        return true;
-      }
-
-      const checkedOutAt = new Date().toISOString();
-      const checkedInAt = booking.checked_in_at ?? checkedOutAt;
-
-      db.exec("BEGIN");
-      try {
-        db.prepare(`
-          INSERT INTO session_history (
-            pet_name, pet_type, phone, date, time_range,
-            staff_id, staff_name, checked_in_at, checked_out_at, amount
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          booking.pet_name,
-          booking.pet_type,
-          booking.phone,
-          booking.date,
-          booking.time_range,
-          booking.staff_id,
-          booking.staff_name,
-          checkedInAt,
-          checkedOutAt,
-          body.amount,
-        );
-
-        db.prepare("DELETE FROM bookings WHERE id = ?").run(bookingId);
-        if (booking.staff_id) {
-          db.prepare("UPDATE staff SET busy_with = NULL WHERE id = ?").run(booking.staff_id);
+      if (rpcError) {
+        if (rpcError.message.includes("Booking not found")) {
+          sendError(res, 404, "Booking not found");
+          return true;
         }
-        db.exec("COMMIT");
-      } catch (error) {
-        db.exec("ROLLBACK");
-        throw error;
+        throw new Error(rpcError.message);
       }
 
-      sendJson(res, 200, { ok: true, amount: body.amount });
+      sendJson(res, 200, result);
       return true;
     }
+
+    // ── History ────────────────────────────────────────────────────────────
 
     if (method === "GET" && pathname === "/api/history") {
       const url = new URL(req.url ?? "", "http://localhost");
@@ -549,36 +509,35 @@ export async function handleApiRequest(
       const month = url.searchParams.get("month");
       const year = url.searchParams.get("year");
       const staffIdParam = url.searchParams.get("staffId");
-      const staffId = staffIdParam ? Number(staffIdParam) : null;
 
-      let query = `
-        SELECT id, pet_name, pet_type, phone, date, time_range,
-               staff_id, staff_name, checked_in_at, checked_out_at, amount
-        FROM session_history
-        WHERE 1 = 1
-      `;
-      const params: (string | number)[] = [];
+      let query = db
+        .from("session_history")
+        .select(
+          "id, pet_name, pet_type, phone, date, time_range, staff_id, staff_name, checked_in_at, checked_out_at, amount",
+        );
 
       if (date) {
-        query += " AND date = ?";
-        params.push(date);
+        query = query.eq("date", date);
       } else if (month && year) {
         const startDate = `${year}-${String(Number(month)).padStart(2, "0")}-01`;
         const endMonth = Number(month) === 12 ? 1 : Number(month) + 1;
         const endYear = Number(month) === 12 ? Number(year) + 1 : Number(year);
         const endDate = `${endYear}-${String(endMonth).padStart(2, "0")}-01`;
-        query += " AND date >= ? AND date < ?";
-        params.push(startDate, endDate);
-      }
-      if (staffId !== null && !Number.isNaN(staffId)) {
-        query += " AND staff_id = ?";
-        params.push(staffId);
+        query = query.gte("date", startDate).lt("date", endDate);
       }
 
-      query += " ORDER BY checked_out_at DESC";
+      if (staffIdParam) {
+        const staffId = Number(staffIdParam);
+        if (!Number.isNaN(staffId)) {
+          query = query.eq("staff_id", staffId);
+        }
+      }
 
-      const rows = db.prepare(query).all(...params) as SessionHistoryRow[];
-      sendJson(res, 200, rows.map(mapSessionHistory));
+      query = query.order("checked_out_at", { ascending: false });
+
+      const { data, error } = await query;
+      if (error) throw new Error(error.message);
+      sendJson(res, 200, (data as SessionHistoryRow[]).map(mapSessionHistory));
       return true;
     }
 

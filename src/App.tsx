@@ -1734,7 +1734,7 @@ function HistoryScreen({
                   <span style={{ color: record.staffName ? "#3D4A43" : "#B0B8B3" }} className="text-sm font-semibold">
                     {record.staffName ?? "—"}
                   </span>
-                  <span style={{ color: "#4B9A74" }} className="text-sm font-extrabold">${record.amount.toFixed(2)}</span>
+                  <span style={{ color: "#4B9A74" }} className="text-sm font-extrabold">{record.amount.toLocaleString()} Ks</span>
                 </div>
               ))}
             </div>
@@ -1909,7 +1909,7 @@ function CheckoutModal({
         <div className="mb-8">
           <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Payment Amount</label>
           <div style={{ border: "1.5px solid #E8E3DA", backgroundColor: "#FAFAF8" }} className="flex items-center rounded-xl overflow-hidden focus-within:border-[#F6C453] transition-colors">
-            <span style={{ backgroundColor: "#F0EDE6", color: "#6B7A72", borderRight: "1.5px solid #E8E3DA" }} className="px-4 py-3 font-bold text-sm">$</span>
+            <span style={{ backgroundColor: "#F0EDE6", color: "#6B7A72", borderRight: "1.5px solid #E8E3DA" }} className="px-4 py-3 font-bold text-sm">Ks</span>
             <input
               type="number"
               value={amount}

@@ -9,3 +9,4 @@
 - Prefers surgical file edits (old_string → new_string) over rewriting entire files. Confidence: 0.8
 - Full-stack features follow a bottom-up order: server route → API client → UI component → wiring/routing. Confidence: 0.75
 - Communicates UI/visual changes by sharing screenshots or images alongside brief text instructions (e.g. "this is logo so that change logo in nav bar") rather than describing visuals in words. Confidence: 0.8
+- App uses Myanmar Kyats ("Ks") as the currency symbol, not USD. Use `.toLocaleString()` for formatting (no decimals needed for Kyats). Confidence: 0.95

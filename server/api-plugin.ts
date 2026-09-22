@@ -1,7 +1,7 @@
 import type { Plugin } from "vite";
 import { handleApiRequest } from "./routes";
 
-export function sqliteApiPlugin(): Plugin {
+export function supabaseApiPlugin(): Plugin {
   const attachApi = (middlewares: { use: (fn: (req: import("node:http").IncomingMessage, res: import("node:http").ServerResponse, next: (err?: Error) => void) => void) => void }) => {
     middlewares.use((req, res, next) => {
       const pathname = (req.url ?? "").split("?")[0] ?? "";
@@ -14,7 +14,7 @@ export function sqliteApiPlugin(): Plugin {
   };
 
   return {
-    name: "fufu-petspa-sqlite-api",
+    name: "fufu-petspa-api",
     configureServer(server) {
       attachApi(server.middlewares);
     },
