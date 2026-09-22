@@ -10,4 +10,4 @@
 - Full-stack features follow a bottom-up order: server route → API client → UI component → wiring/routing. Confidence: 0.75
 - Communicates UI/visual changes by sharing screenshots or images alongside brief text instructions (e.g. "this is logo so that change logo in nav bar") rather than describing visuals in words. Confidence: 0.8
 - App uses Myanmar Kyats ("Ks") as the currency symbol, not USD. Use `.toLocaleString()` for formatting (no decimals needed for Kyats). Confidence: 0.95
-- Prefers the agent to execute deployment/infrastructure tasks directly (e.g., applying database schemas to Supabase, configuring env files) rather than providing manual step-by-step instructions. Confidence: 0.8
+- Prefers the agent to execute deployment/infrastructure tasks directly (e.g., applying database schemas to Supabase, configuring env files) rather than providing manual step-by-step instructions. Will ignore questions asking for manual intervention and instead report the resulting error, expecting the agent to solve it end-to-end. Confidence: 0.9
