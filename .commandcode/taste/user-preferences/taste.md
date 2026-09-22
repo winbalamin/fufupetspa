@@ -1,0 +1,11 @@
+# User Preferences
+- Gives very brief, terse task instructions (e.g. "add function for booking editing") and expects the assistant to infer full scope. Confidence: 0.85
+- Expects a summary of all changes made at the end of a task. Confidence: 0.7
+- Expects full-stack implementation from a single feature request — server, API client, and UI all handled in one pass. Confidence: 0.85
+- Expects build/type-check verification (e.g. `tsc --noEmit`, `vite build`) after making code changes. Confidence: 0.8
+- Prefers multi-step tasks to be tracked with a todo list. Confidence: 0.75
+- TypeScript with React (Vite) frontend and custom Node.js HTTP server backend (not Express). Confidence: 0.9
+- Inline React styles mixed with Tailwind utility classes. Confidence: 0.9
+- Prefers surgical file edits (old_string → new_string) over rewriting entire files. Confidence: 0.8
+- Full-stack features follow a bottom-up order: server route → API client → UI component → wiring/routing. Confidence: 0.75
+- Communicates UI/visual changes by sharing screenshots or images alongside brief text instructions (e.g. "this is logo so that change logo in nav bar") rather than describing visuals in words. Confidence: 0.8

@@ -1,0 +1,11 @@
+{
+  "title": "FuFu PetSpa Manager",
+  "description": "Manage pet spa bookings and staff assignments efficiently with a clean, user-friendly system designed for pet shop owners to track pets by name only.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
