@@ -1,13 +1,8 @@
 {
   "buildCommand": "npx vite build",
   "outputDirectory": "dist",
-  "functions": {
-    "api/**/*.ts": {
-      "includeFiles": "server/**"
-    }
-  },
   "routes": [
-    { "src": "/api/(.*)", "dest": "/api/[...path]" },
+    { "src": "/api/(.*)", "dest": "/api/index" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
