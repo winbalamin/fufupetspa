@@ -17,7 +17,8 @@
       "Shell(node -e require('dotenv/config'); const {createClient} = require('@supabase/supabase-js'); const c = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY); c.from('staff').select('count').then(r => console.log(JSON.stringify(r, null, 2))).catch(e => console.error('Error:', e)) 2 >& 1)",
       "Shell(node -e const fs=require('fs'); const env=Object.fromEntries(fs.readFileSync('.env','utf8').split('\\n').filter(l=>l.includes('=')).map(l=>l.split('='))); const {createClient}=require('@supabase/supabase-js'); const c=createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY); c.from('staff').select('count').then(r => console.log(JSON.stringify(r, null, 2))).catch(e => console.error('Error:', e)) 2 >& 1)",
       "Shell(node -e const fs=require('fs'); const env=Object.fromEntries(fs.readFileSync('.env','utf8').split('\\n').filter(l=>l.includes('=')).map(l=>l.split('='))); const {createClient}=require('@supabase/supabase-js'); const c=createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY); c.from('staff').select('id,name,role,busy_with,username,password_hash').eq('username','staff1').single().then(r => console.log(JSON.stringify(r, null, 2))).catch(e => console.error('Error:', e)) 2 >& 1)",
-      "Shell(rmdir:*)"
+      "Shell(rmdir:*)",
+      "Shell(git:*)"
     ],
     "deny": [],
     "defaultMode": "default"

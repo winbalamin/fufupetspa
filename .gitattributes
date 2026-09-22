@@ -17,6 +17,9 @@
 *.ai                 filter=lfs diff=lfs merge=lfs -text
 *.sketch             filter=lfs diff=lfs merge=lfs -text
 
+# Exclude public assets from LFS (Vercel can't resolve LFS pointers)
+public/logo.jpg      !filter !diff !merge text=auto
+
 # ---------------------------------------------------------------------------
 # Video
 # ---------------------------------------------------------------------------
