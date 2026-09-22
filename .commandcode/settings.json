@@ -11,7 +11,8 @@
       "Shell(npm:*)",
       "Shell(pnpm:*)",
       "Shell(dir:*)",
-      "Shell(npx vite build 2 >& 1)"
+      "Shell(npx vite build 2 >& 1)",
+      "Shell(npx supabase --version 2>&1)"
     ],
     "deny": [],
     "defaultMode": "default"
