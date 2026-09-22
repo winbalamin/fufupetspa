@@ -1,7 +1,7 @@
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 
 export const ADMIN_USERNAME = "admin";
-export const ADMIN_PASSWORD = "password";
+export const ADMIN_PASSWORD = "iMnL$s491Dih$R";
 export const DEFAULT_STAFF_PASSWORD = "password";
 
 export function hashPassword(password: string) {

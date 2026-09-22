@@ -335,7 +335,7 @@ function LoginScreen({ onLogin }: { onLogin: (session: AuthSession) => void }) {
                 id="login-username"
                 type="text"
                 autoComplete="username"
-                placeholder="e.g. admin or staff1"
+                placeholder="Username"
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
@@ -381,9 +381,6 @@ function LoginScreen({ onLogin }: { onLogin: (session: AuthSession) => void }) {
             </button>
           </form>
 
-          <p style={{ color: "#B0B8B3" }} className="text-xs font-semibold mt-6 text-center">
-            Admin: admin / password · Staff: staff1, staff2, staff3 / password
-          </p>
         </div>
       </main>
     </div>

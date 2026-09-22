@@ -61,7 +61,7 @@ function getSupabase(): SupabaseClient {
 // ── Auth ──────────────────────────────────────────────────────────────────
 
 const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "password";
+const ADMIN_PASSWORD = "iMnL$s491Dih$R";
 
 function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
