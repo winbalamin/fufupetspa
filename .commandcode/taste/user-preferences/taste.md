@@ -12,3 +12,5 @@
 - App uses Myanmar Kyats ("Ks") as the currency symbol, not USD. Use `.toLocaleString()` for formatting (no decimals needed for Kyats). Confidence: 0.95
 - Deploys the app to Vercel (hosted at fufupetspa.vercel.app). Confidence: 0.9
 - Prefers the agent to execute deployment/infrastructure tasks directly (e.g., applying database schemas to Supabase, configuring env files) rather than providing manual step-by-step instructions. Will ignore questions asking for manual intervention and instead report the resulting error, expecting the agent to solve it end-to-end. Confidence: 0.9
+- Reports runtime errors by pasting raw browser console output (with stack traces and minified filenames) and zero additional context or explanation — expects the agent to diagnose and fix from the raw dump alone. Confidence: 0.8
+- Sometimes pastes external AI-generated solutions or advice alongside error reports — expects this agent to critically evaluate the advice and reject it if it conflicts with the project's architecture, rather than blindly applying it. Confidence: 0.75
