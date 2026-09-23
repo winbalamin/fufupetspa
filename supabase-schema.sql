@@ -23,7 +23,11 @@ CREATE TABLE IF NOT EXISTS bookings (
   time_range TEXT NOT NULL,
   staff_id INTEGER REFERENCES staff(id) ON DELETE SET NULL,
   status TEXT NOT NULL CHECK (status IN ('Waiting', 'In-Progress')) DEFAULT 'Waiting',
-  checked_in_at TEXT
+  checked_in_at TEXT,
+  created_by TEXT,
+  size TEXT,
+  qty INTEGER,
+  service_type TEXT
 );
 
 CREATE TABLE IF NOT EXISTS session_history (

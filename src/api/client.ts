@@ -47,6 +47,12 @@ export function deleteStaff(id: number) {
   });
 }
 
+export function deleteBooking(id: number) {
+  return request<{ ok: true }>(`/api/bookings/${id}`, {
+    method: "DELETE",
+  });
+}
+
 export function fetchBookings(date?: string) {
   const query = date ? `?date=${encodeURIComponent(date)}` : "";
   return request<Booking[]>(`/api/bookings${query}`);
@@ -62,6 +68,10 @@ export function createBooking(input: {
   phone: string;
   date: string;
   timeRange: string;
+  createdBy: string;
+  size: string;
+  qty: number;
+  serviceType: string;
 }) {
   return request<Booking>("/api/bookings", {
     method: "POST",
@@ -71,7 +81,7 @@ export function createBooking(input: {
 
 export function updateBooking(
   id: number,
-  input: { petName: string; petType: PetType; phone: string; date: string; timeRange: string },
+  input: { petName: string; petType: PetType; phone: string; date: string; timeRange: string; size: string; qty: number; serviceType: string },
 ) {
   return request<Booking>(`/api/bookings/${id}`, {
     method: "PATCH",

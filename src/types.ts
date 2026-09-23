@@ -10,6 +10,10 @@ export interface Booking {
   timeRange: string;
   staffId: number | null;
   status: BookingStatus;
+  createdBy: string | null;
+  size: string | null;
+  qty: number | null;
+  serviceType: string | null;
 }
 
 export interface Staff {

@@ -1,5 +1,6 @@
 # User Preferences
 - Gives very brief, terse task instructions (e.g. "add function for booking editing") and expects the assistant to infer full scope. Confidence: 0.85
+- Will not respond to clarifying questions — expects the agent to proceed immediately with reasonable defaults rather than waiting for answers. Confidence: 0.85
 - Expects a summary of all changes made at the end of a task. Confidence: 0.7
 - Expects full-stack implementation from a single feature request — server, API client, and UI all handled in one pass. Confidence: 0.85
 - Expects build/type-check verification (e.g. `tsc --noEmit`, `vite build`) after making code changes. Confidence: 0.8
@@ -15,3 +16,4 @@
 - Reports runtime errors by pasting raw browser console output (with stack traces and minified filenames) and zero additional context or explanation — expects the agent to diagnose and fix from the raw dump alone. Confidence: 0.8
 - Sometimes pastes external AI-generated solutions or advice alongside error reports — expects this agent to critically evaluate the advice and reject it if it conflicts with the project's architecture, rather than blindly applying it. Confidence: 0.75
 - Security-conscious: no credential hints or default passwords should be visible in the UI (e.g., login page). When changing credentials, remove all traces of old/default values from user-facing surfaces. Confidence: 0.8
+- Enforces role-based permissions: destructive actions (e.g., delete booking) are restricted to admin only, while staff can perform standard actions (check-in, checkout, edit). Wants admin-only buttons conditionally rendered in both desktop and mobile views. Confidence: 0.85

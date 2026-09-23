@@ -24,6 +24,10 @@ interface Booking {
   timeRange: string;
   staffId: number | null;
   status: BookingStatus;
+  createdBy: string | null;
+  size: string | null;
+  qty: number | null;
+  serviceType: string | null;
 }
 interface AuthSession {
   role: UserRole;
@@ -90,7 +94,7 @@ function mapStaff(row: any): Staff {
   return { id: row.id, name: row.name, role: row.role, busyWith: row.busy_with, username: row.username };
 }
 function mapBooking(row: any): Booking {
-  return { id: row.id, petName: row.pet_name, petType: row.pet_type, phone: row.phone, date: row.date, timeRange: row.time_range, staffId: row.staff_id, status: row.status };
+  return { id: row.id, petName: row.pet_name, petType: row.pet_type, phone: row.phone, date: row.date, timeRange: row.time_range, staffId: row.staff_id, status: row.status, createdBy: row.created_by ?? null, size: row.size ?? null, qty: row.qty ?? null, serviceType: row.service_type ?? null };
 }
 function mapSessionHistory(row: any): SessionHistory {
   return { id: row.id, petName: row.pet_name, petType: row.pet_type, phone: row.phone, date: row.date, timeRange: row.time_range, staffId: row.staff_id, staffName: row.staff_name, checkedInAt: row.checked_in_at, checkedOutAt: row.checked_out_at, amount: row.amount };
@@ -189,7 +193,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const startDate = url.searchParams.get("startDate");
       const endDate = url.searchParams.get("endDate");
       const date = url.searchParams.get("date");
-      let query = db.from("bookings").select("id, pet_name, pet_type, phone, date, time_range, staff_id, status");
+      let query = db.from("bookings").select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type");
       if (startDate && endDate) {
         query = query.gte("date", startDate).lte("date", endDate).order("date").order("id");
       } else {
@@ -207,7 +211,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: inserted, error: insertErr } = await db.from("bookings").insert({
         pet_name: body.petName.trim(), pet_type: body.petType, phone: body.phone?.trim() ?? "",
         date: body.date, time_range: body.timeRange, staff_id: null, status: "Waiting",
-      }).select("id, pet_name, pet_type, phone, date, time_range, staff_id, status").single();
+        created_by: body.createdBy ?? null, size: body.size ?? null, qty: body.qty ?? null, service_type: body.serviceType ?? null,
+      }).select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type").single();
       if (insertErr) throw new Error(insertErr.message);
       return res.status(201).json(mapBooking(inserted));
     }
@@ -223,10 +228,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!body?.petName?.trim() || !body?.petType || !body?.date || !body?.timeRange) return res.status(400).json({ error: "Missing required booking fields" });
       await db.from("bookings").update({
         pet_name: body.petName.trim(), pet_type: body.petType, phone: body.phone?.trim() ?? "",
-        date: body.date, time_range: body.timeRange,
+        date: body.date, time_range: body.timeRange, size: body.size ?? null, qty: body.qty ?? null, service_type: body.serviceType ?? null,
       }).eq("id", bookingId);
-      const { data: row } = await db.from("bookings").select("id, pet_name, pet_type, phone, date, time_range, staff_id, status").eq("id", bookingId).single();
+      const { data: row } = await db.from("bookings").select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type").eq("id", bookingId).single();
       return res.status(200).json(mapBooking(row));
+    }
+
+    // Delete booking (admin only)
+    if (bookingIdMatch && method === "DELETE") {
+      const bookingId = Number(bookingIdMatch[1]);
+      const { data: existing } = await db.from("bookings").select("id, status, staff_id").eq("id", bookingId).single();
+      if (!existing) return res.status(404).json({ error: "Booking not found" });
+      if (existing.status === "In-Progress" && existing.staff_id) {
+        await db.from("staff").update({ busy_with: null }).eq("id", existing.staff_id);
+      }
+      await db.from("bookings").delete().eq("id", bookingId);
+      return res.status(200).json({ ok: true });
     }
 
     // Check-in (RPC)

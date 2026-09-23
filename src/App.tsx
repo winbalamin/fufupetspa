@@ -411,6 +411,7 @@ function Dashboard({
   onCheckin,
   onCheckout,
   onEditBooking,
+  onDeleteBooking,
   onChangeWeek,
   onLogout,
 }: {
@@ -427,6 +428,7 @@ function Dashboard({
   onCheckin: (b: Booking) => void;
   onCheckout: (b: Booking) => void;
   onEditBooking: (b: Booking) => void;
+  onDeleteBooking: (b: Booking) => void;
   onChangeWeek: (offset: number) => void;
   onLogout: () => void;
 }) {
@@ -574,6 +576,12 @@ function Dashboard({
                         {assignedStaff ? assignedStaff.name : "Not assigned"}
                       </span>
                     </div>
+                    {b.createdBy && (
+                      <div className="flex items-center gap-2">
+                        <span style={{ color: "#6B7A72" }} className="text-xs">📝</span>
+                        <span style={{ color: "#6B7A72" }} className="text-xs font-semibold">Booked by {b.createdBy}</span>
+                      </div>
+                    )}
                   </div>
                   {/* Action */}
                   {b.status === "Waiting" ? (
@@ -592,15 +600,35 @@ function Dashboard({
                       >
                         Edit
                       </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => onDeleteBooking(b)}
+                          style={{ border: "1.5px solid #FECACA", color: "#B91C1C" }}
+                          className="py-2.5 px-4 rounded-full font-bold text-sm hover:border-[#B91C1C] transition-all whitespace-nowrap"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   ) : (
-                    <button
-                      onClick={() => onCheckout(b)}
-                      style={{ backgroundColor: "#F6C453", color: "#3D4A43" }}
-                      className="w-full py-2.5 rounded-full font-bold text-sm hover:opacity-90 active:scale-95 transition-all shadow-sm"
-                    >
-                      Checkout
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onCheckout(b)}
+                        style={{ backgroundColor: "#F6C453", color: "#3D4A43" }}
+                        className="flex-1 py-2.5 rounded-full font-bold text-sm hover:opacity-90 active:scale-95 transition-all shadow-sm"
+                      >
+                        Checkout
+                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => onDeleteBooking(b)}
+                          style={{ border: "1.5px solid #FECACA", color: "#B91C1C" }}
+                          className="py-2.5 px-4 rounded-full font-bold text-sm hover:border-[#B91C1C] transition-all whitespace-nowrap"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               );
@@ -609,8 +637,8 @@ function Dashboard({
 
           {/* ── Desktop table (hidden on mobile) ── */}
           <div style={{ backgroundColor: "#fff", border: "1px solid #E8E3DA" }} className="hidden sm:block rounded-2xl shadow-sm overflow-hidden">
-            <div style={{ borderBottom: "1px solid #E8E3DA", backgroundColor: "#FAFAF8" }} className="grid grid-cols-[2fr_1fr_2.5fr_1.5fr_1.2fr_1.8fr] px-6 py-3 gap-4">
-              {["Pet Name", "Type", "Date & Time", "Assigned Staff", "Status", "Action"].map((h) => (
+            <div style={{ borderBottom: "1px solid #E8E3DA", backgroundColor: "#FAFAF8" }} className="grid grid-cols-[2fr_1fr_2.5fr_1.5fr_1.2fr_1.2fr_1.8fr] px-6 py-3 gap-4">
+              {["Pet Name", "Type", "Date & Time", "Assigned Staff", "Booked by", "Status", "Action"].map((h) => (
                 <div key={h} style={{ color: "#6B7A72", letterSpacing: "0.07em" }} className="text-xs font-extrabold uppercase">{h}</div>
               ))}
             </div>
@@ -620,7 +648,7 @@ function Dashboard({
                 <div
                   key={b.id}
                   style={{ borderBottom: i < bookings.length - 1 ? "1px solid #F0EDE6" : "none" }}
-                  className="grid grid-cols-[2fr_1fr_2.5fr_1.5fr_1.2fr_1.8fr] px-6 py-4 gap-4 items-center hover:bg-[#FAFAF8] transition-colors"
+                  className="grid grid-cols-[2fr_1fr_2.5fr_1.5fr_1.2fr_1.2fr_1.8fr] px-6 py-4 gap-4 items-center hover:bg-[#FAFAF8] transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <PetAvatar type={b.petType} size={36} />
@@ -634,15 +662,26 @@ function Dashboard({
                   <span style={{ color: assignedStaff ? "#3D4A43" : "#B0B8B3" }} className="text-sm font-semibold">
                     {assignedStaff ? assignedStaff.name : "—"}
                   </span>
+                  <span style={{ color: b.createdBy ? "#3D4A43" : "#B0B8B3" }} className="text-sm font-semibold">
+                    {b.createdBy ?? "—"}
+                  </span>
                   <div><StatusPill status={b.status} /></div>
                   <div className="flex items-center gap-2">
                     {b.status === "Waiting" ? (
                       <>
                         <button onClick={() => onCheckin(b)} style={{ backgroundColor: "#7FC8A9", color: "#fff" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:opacity-90 active:scale-95 transition-all whitespace-nowrap shadow-sm">Check-in</button>
                         <button onClick={() => onEditBooking(b)} style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#F6C453] hover:text-[#3D4A43] transition-all whitespace-nowrap">Edit</button>
+                        {isAdmin && (
+                          <button onClick={() => onDeleteBooking(b)} style={{ border: "1.5px solid #FECACA", color: "#B91C1C" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#B91C1C] transition-all whitespace-nowrap">Delete</button>
+                        )}
                       </>
                     ) : (
-                      <button onClick={() => onCheckout(b)} style={{ backgroundColor: "#F6C453", color: "#3D4A43" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:opacity-90 active:scale-95 transition-all whitespace-nowrap shadow-sm">Checkout</button>
+                      <>
+                        <button onClick={() => onCheckout(b)} style={{ backgroundColor: "#F6C453", color: "#3D4A43" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:opacity-90 active:scale-95 transition-all whitespace-nowrap shadow-sm">Checkout</button>
+                        {isAdmin && (
+                          <button onClick={() => onDeleteBooking(b)} style={{ border: "1.5px solid #FECACA", color: "#B91C1C" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#B91C1C] transition-all whitespace-nowrap">Delete</button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -810,7 +849,7 @@ function AddBookingScreen({
   onConfirm,
 }: {
   onBack: () => void;
-  onConfirm: (petName: string, petType: PetType, date: string, timeRange: string, phone: string) => void;
+  onConfirm: (petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string) => void;
 }) {
   const [petName, setPetName] = useState("");
   const [petType, setPetType] = useState<PetType>("Dog");
@@ -818,6 +857,9 @@ function AddBookingScreen({
   const [startTime, setStartTime] = useState("10:00");
   const [endTime, setEndTime] = useState("12:00");
   const [phone, setPhone] = useState("");
+  const [size, setSize] = useState("");
+  const [qty, setQty] = useState(1);
+  const [serviceType, setServiceType] = useState("");
   const [timeError, setTimeError] = useState<string | null>(null);
 
   const petTypes: PetType[] = ["Dog", "Cat", "Rabbit", "Other"];
@@ -830,7 +872,7 @@ function AddBookingScreen({
       setTimeError("End time must be after start time");
       return;
     }
-    onConfirm(petName.trim(), petType, date, timeRange, phone.trim());
+    onConfirm(petName.trim(), petType, date, timeRange, phone.trim(), size.trim(), qty, serviceType.trim());
   };
 
   return (
@@ -915,6 +957,45 @@ function AddBookingScreen({
                 );
               })}
             </div>
+          </div>
+
+          {/* Size & Qty */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div>
+              <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Size</label>
+              <input
+                type="text"
+                placeholder="e.g. Small, Medium, Large"
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+              />
+            </div>
+            <div>
+              <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Qty</label>
+              <input
+                type="number"
+                min="1"
+                value={qty}
+                onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
+                style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Service Type */}
+          <div className="mb-6">
+            <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Service Type</label>
+            <input
+              type="text"
+              placeholder="e.g. Bath, Grooming, Nail Trim"
+              value={serviceType}
+              onChange={(e) => setServiceType(e.target.value)}
+              style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+            />
           </div>
 
           {/* Date */}
@@ -1003,7 +1084,7 @@ function EditBookingScreen({
 }: {
   booking: Booking;
   onBack: () => void;
-  onConfirm: (id: number, petName: string, petType: PetType, date: string, timeRange: string, phone: string) => void;
+  onConfirm: (id: number, petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string) => void;
 }) {
   const [petName, setPetName] = useState(booking.petName);
   const [petType, setPetType] = useState<PetType>(booking.petType);
@@ -1027,6 +1108,9 @@ function EditBookingScreen({
   const [startTime, setStartTime] = useState(initial.start);
   const [endTime, setEndTime] = useState(initial.end);
   const [phone, setPhone] = useState(booking.phone);
+  const [size, setSize] = useState(booking.size ?? "");
+  const [qty, setQty] = useState(booking.qty ?? 1);
+  const [serviceType, setServiceType] = useState(booking.serviceType ?? "");
   const [timeError, setTimeError] = useState<string | null>(null);
 
   const petTypes: PetType[] = ["Dog", "Cat", "Rabbit", "Other"];
@@ -1039,7 +1123,7 @@ function EditBookingScreen({
       setTimeError("End time must be after start time");
       return;
     }
-    onConfirm(booking.id, petName.trim(), petType, date, timeRange, phone.trim());
+    onConfirm(booking.id, petName.trim(), petType, date, timeRange, phone.trim(), size.trim(), qty, serviceType.trim());
   };
 
   return (
@@ -1121,6 +1205,45 @@ function EditBookingScreen({
             </div>
           </div>
 
+          {/* Size & Qty */}
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div>
+              <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Size</label>
+              <input
+                type="text"
+                placeholder="e.g. Small, Medium, Large"
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+                style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+              />
+            </div>
+            <div>
+              <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Qty</label>
+              <input
+                type="number"
+                min="1"
+                value={qty}
+                onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
+                style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Service Type */}
+          <div className="mb-6">
+            <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Service Type</label>
+            <input
+              type="text"
+              placeholder="e.g. Bath, Grooming, Nail Trim"
+              value={serviceType}
+              onChange={(e) => setServiceType(e.target.value)}
+              style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+            />
+          </div>
+
           <div className="mb-6">
             <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Date</label>
             <input
@@ -1197,7 +1320,7 @@ function EditBookingScreen({
 
 // ─── Manage Staff ─────────────────────────────────────────────────────────────
 
-const STAFF_ROLES = ["Senior Groomer", "Groomer", "Groomer Trainee", "Bath Specialist"];
+const STAFF_ROLES = ["Basic training", "Basic", "Groomer", "Head Groomer"];
 
 function ManageStaffScreen({
   staff,
@@ -2022,6 +2145,16 @@ export default function App() {
     setScreen("edit-booking");
   };
 
+  const handleDeleteBooking = async (b: Booking) => {
+    if (!window.confirm(`Delete booking for ${b.petName}?`)) return;
+    try {
+      await api.deleteBooking(b.id);
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete booking");
+    }
+  };
+
   const handleStartSpa = async (bookingId: number, staffId: number) => {
     try {
       await api.checkInBooking(bookingId, staffId);
@@ -2044,9 +2177,9 @@ export default function App() {
     }
   };
 
-  const handleAddBooking = async (petName: string, petType: PetType, date: string, timeRange: string, phone: string) => {
+  const handleAddBooking = async (petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string) => {
     try {
-      await api.createBooking({ petName, petType, phone, date, timeRange });
+      await api.createBooking({ petName, petType, phone, date, timeRange, createdBy: session?.name ?? "Unknown", size, qty, serviceType });
       await loadData();
       setScreen("dashboard");
     } catch (err) {
@@ -2054,9 +2187,9 @@ export default function App() {
     }
   };
 
-  const handleUpdateBooking = async (id: number, petName: string, petType: PetType, date: string, timeRange: string, phone: string) => {
+  const handleUpdateBooking = async (id: number, petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string) => {
     try {
-      await api.updateBooking(id, { petName, petType, phone, date, timeRange });
+      await api.updateBooking(id, { petName, petType, phone, date, timeRange, size, qty, serviceType });
       await loadData();
       setEditingBooking(null);
       setScreen("dashboard");
@@ -2125,6 +2258,7 @@ export default function App() {
           onCheckin={handleCheckin}
           onCheckout={handleCheckout}
           onEditBooking={handleEditBooking}
+          onDeleteBooking={handleDeleteBooking}
           onChangeWeek={(offset) => setWeekOffset(offset)}
           onLogout={handleLogout}
         />

@@ -22,6 +22,10 @@ type BookingRow = {
   staff_id: number | null;
   status: "Waiting" | "In-Progress";
   checked_in_at?: string | null;
+  created_by?: string | null;
+  size?: string | null;
+  qty?: number | null;
+  service_type?: string | null;
 };
 
 type SessionHistoryRow = {
@@ -74,6 +78,10 @@ function mapBooking(row: BookingRow): Booking {
     timeRange: row.time_range,
     staffId: row.staff_id,
     status: row.status,
+    createdBy: row.created_by ?? null,
+    size: row.size ?? null,
+    qty: row.qty ?? null,
+    serviceType: row.service_type ?? null,
   };
 }
 
@@ -338,7 +346,7 @@ export async function handleApiRequest(
 
       let query = db
         .from("bookings")
-        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status");
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type");
 
       if (startDate && endDate) {
         query = query.gte("date", startDate).lte("date", endDate).order("date").order("id");
@@ -359,6 +367,10 @@ export async function handleApiRequest(
         phone?: string;
         date?: string;
         timeRange?: string;
+        createdBy?: string;
+        size?: string;
+        qty?: number;
+        serviceType?: string;
       }>(req);
 
       if (!body.petName?.trim() || !body.petType || !body.date || !body.timeRange) {
@@ -376,8 +388,12 @@ export async function handleApiRequest(
           time_range: body.timeRange,
           staff_id: null,
           status: "Waiting",
+          created_by: body.createdBy ?? null,
+          size: body.size ?? null,
+          qty: body.qty ?? null,
+          service_type: body.serviceType ?? null,
         })
-        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status")
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type")
         .single();
 
       if (insertErr) throw new Error(insertErr.message);
@@ -394,6 +410,9 @@ export async function handleApiRequest(
         phone?: string;
         date?: string;
         timeRange?: string;
+        size?: string;
+        qty?: number;
+        serviceType?: string;
       }>(req);
 
       const { data: existing } = await db
@@ -425,6 +444,9 @@ export async function handleApiRequest(
           phone: body.phone?.trim() ?? "",
           date: body.date,
           time_range: body.timeRange,
+          size: body.size ?? null,
+          qty: body.qty ?? null,
+          service_type: body.serviceType ?? null,
         })
         .eq("id", bookingId);
 
@@ -432,11 +454,34 @@ export async function handleApiRequest(
 
       const { data: row } = await db
         .from("bookings")
-        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status")
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type")
         .eq("id", bookingId)
         .single();
 
       sendJson(res, 200, mapBooking(row as BookingRow));
+      return true;
+    }
+
+    // Delete booking (admin only)
+    if (bookingIdMatch && method === "DELETE") {
+      const bookingId = Number(bookingIdMatch[1]);
+      const { data: existing } = await db
+        .from("bookings")
+        .select("id, status, staff_id")
+        .eq("id", bookingId)
+        .single();
+
+      if (!existing) {
+        sendError(res, 404, "Booking not found");
+        return true;
+      }
+
+      if (existing.status === "In-Progress" && existing.staff_id) {
+        await db.from("staff").update({ busy_with: null }).eq("id", existing.staff_id);
+      }
+
+      await db.from("bookings").delete().eq("id", bookingId);
+      sendJson(res, 200, { ok: true });
       return true;
     }
 
