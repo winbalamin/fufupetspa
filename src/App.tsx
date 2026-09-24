@@ -317,7 +317,7 @@ function LoginScreen({ onLogin }: { onLogin: (session: AuthSession) => void }) {
           <div style={{ flexShrink: 0 }} className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden">
             <img src="/logo.jpg" alt="FuFu PetSpa" className="w-full h-full object-cover" />
           </div>
-          <span style={{ color: "#3D4A43" }} className="font-extrabold text-base sm:text-xl tracking-tight">FuFu PetSpa Manager</span>
+          <span style={{ color: "#3D4A43" }} className="font-extrabold text-base sm:text-xl tracking-tight">FuFu PetSpa Booking</span>
         </div>
       </header>
 
@@ -446,7 +446,7 @@ function Dashboard({
             <div style={{ flexShrink: 0 }} className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl overflow-hidden">
               <img src="/logo.jpg" alt="FuFu PetSpa" className="w-full h-full object-cover" />
             </div>
-            <span style={{ color: "#3D4A43" }} className="font-extrabold text-base sm:text-xl tracking-tight truncate">FuFu PetSpa Manager</span>
+            <span style={{ color: "#3D4A43" }} className="font-extrabold text-base sm:text-xl tracking-tight truncate">FuFu PetSpa Booking</span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <div className="hidden sm:flex flex-col items-end" style={{ color: "#6B7A72" }}>
