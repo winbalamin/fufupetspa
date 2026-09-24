@@ -26,6 +26,7 @@ type BookingRow = {
   size?: string | null;
   qty?: number | null;
   service_type?: string | null;
+  breed?: string | null;
 };
 
 type SessionHistoryRow = {
@@ -82,11 +83,15 @@ function mapBooking(row: BookingRow): Booking {
     size: row.size ?? null,
     qty: row.qty ?? null,
     serviceType: row.service_type ?? null,
+    breed: row.breed ?? null,
   };
 }
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const myanmar = new Date(utc + 6.5 * 60 * 60000);
+  return myanmar.toISOString().slice(0, 10);
 }
 
 async function readJsonBody<T>(req: IncomingMessage): Promise<T> {
@@ -346,7 +351,7 @@ export async function handleApiRequest(
 
       let query = db
         .from("bookings")
-        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type");
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type, breed");
 
       if (startDate && endDate) {
         query = query.gte("date", startDate).lte("date", endDate).order("date").order("id");
@@ -371,6 +376,7 @@ export async function handleApiRequest(
         size?: string;
         qty?: number;
         serviceType?: string;
+        breed?: string;
       }>(req);
 
       if (!body.petName?.trim() || !body.petType || !body.date || !body.timeRange) {
@@ -392,8 +398,9 @@ export async function handleApiRequest(
           size: body.size ?? null,
           qty: body.qty ?? null,
           service_type: body.serviceType ?? null,
+          breed: body.breed ?? null,
         })
-        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type")
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type, breed")
         .single();
 
       if (insertErr) throw new Error(insertErr.message);
@@ -413,6 +420,7 @@ export async function handleApiRequest(
         size?: string;
         qty?: number;
         serviceType?: string;
+        breed?: string;
       }>(req);
 
       const { data: existing } = await db
@@ -447,6 +455,7 @@ export async function handleApiRequest(
           size: body.size ?? null,
           qty: body.qty ?? null,
           service_type: body.serviceType ?? null,
+          breed: body.breed ?? null,
         })
         .eq("id", bookingId);
 
@@ -454,7 +463,7 @@ export async function handleApiRequest(
 
       const { data: row } = await db
         .from("bookings")
-        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type")
+        .select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type, breed")
         .eq("id", bookingId)
         .single();
 
@@ -589,6 +598,21 @@ export async function handleApiRequest(
       const { data, error } = await query;
       if (error) throw new Error(error.message);
       sendJson(res, 200, (data as SessionHistoryRow[]).map(mapSessionHistory));
+      return true;
+    }
+
+    // Update history amount (admin only)
+    const historyIdMatch = pathname.match(/^\/api\/history\/(\d+)$/);
+    if (method === "PATCH" && historyIdMatch) {
+      const historyId = Number(historyIdMatch[1]);
+      const body = await readJsonBody<{ amount?: number }>(req);
+      if (body.amount === undefined || Number.isNaN(body.amount) || body.amount < 0) {
+        sendError(res, 400, "Valid amount is required");
+        return true;
+      }
+      const { error: updateErr } = await db.from("session_history").update({ amount: body.amount }).eq("id", historyId);
+      if (updateErr) throw new Error(updateErr.message);
+      sendJson(res, 200, { ok: true });
       return true;
     }
 

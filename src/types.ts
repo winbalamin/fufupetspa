@@ -14,6 +14,7 @@ export interface Booking {
   size: string | null;
   qty: number | null;
   serviceType: string | null;
+  breed: string | null;
 }
 
 export interface Staff {

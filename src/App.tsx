@@ -34,14 +34,19 @@ function clearAuthSession() {
 // ─── Initial Data ─────────────────────────────────────────────────────────────
 
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const myanmar = new Date(utc + 6.5 * 60 * 60000);
+  return myanmar.toISOString().slice(0, 10);
 }
 
 function getWeekDates(weekOffset = 0) {
   const now = new Date();
-  const dayOfWeek = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7) + weekOffset * 7);
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const myanmar = new Date(utc + 6.5 * 60 * 60000);
+  const dayOfWeek = myanmar.getDay();
+  const monday = new Date(myanmar);
+  monday.setDate(myanmar.getDate() - ((dayOfWeek + 6) % 7) + weekOffset * 7);
   const dates: string[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
@@ -239,7 +244,7 @@ function PetAvatar({ type, size = 40 }: { type: PetType; size?: number }) {
   );
 }
 
-const STAFF_AVATAR_COLORS = ["#7FC8A9", "#F6C453", "#7FB3E0", "#A07EC8", "#E07E9A", "#B8956A"];
+const STAFF_AVATAR_COLORS = ["#905f4d", "#F6C453", "#7FB3E0", "#A07EC8", "#E07E9A", "#B8956A"];
 
 function staffInitials(name: string) {
   return name
@@ -319,7 +324,7 @@ function LoginScreen({ onLogin }: { onLogin: (session: AuthSession) => void }) {
       <main className="max-w-lg mx-auto px-4 sm:px-6 py-10 sm:py-16">
         <div style={{ backgroundColor: "#fff", border: "1px solid #E8E3DA" }} className="rounded-2xl shadow-sm p-5 sm:p-8">
           <div className="flex items-center gap-3 mb-2">
-            <div style={{ backgroundColor: "#7FC8A9" }} className="w-10 h-10 rounded-xl flex items-center justify-center text-white">
+            <div style={{ backgroundColor: "#905f4d" }} className="w-10 h-10 rounded-xl flex items-center justify-center text-white">
               <LockIcon size={20} />
             </div>
             <h1 style={{ color: "#3D4A43" }} className="text-xl sm:text-2xl font-extrabold tracking-tight">Sign In</h1>
@@ -342,7 +347,7 @@ function LoginScreen({ onLogin }: { onLogin: (session: AuthSession) => void }) {
                   if (error) setError(null);
                 }}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
               />
             </div>
 
@@ -361,7 +366,7 @@ function LoginScreen({ onLogin }: { onLogin: (session: AuthSession) => void }) {
                   if (error) setError(null);
                 }}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
               />
             </div>
 
@@ -374,7 +379,7 @@ function LoginScreen({ onLogin }: { onLogin: (session: AuthSession) => void }) {
             <button
               type="submit"
               disabled={!username.trim() || !password || submitting}
-              style={{ backgroundColor: username.trim() && password && !submitting ? "#7FC8A9" : "#C8E8DA", color: "#fff" }}
+              style={{ backgroundColor: username.trim() && password && !submitting ? "#905f4d" : "#D4B8AD", color: "#fff" }}
               className="w-full py-3.5 rounded-full font-extrabold text-sm shadow-sm transition-all active:scale-95 disabled:cursor-not-allowed"
             >
               {submitting ? "Signing in…" : "Sign In"}
@@ -475,15 +480,13 @@ function Dashboard({
             <p style={{ color: "#6B7A72" }} className="text-xs sm:text-sm mt-0.5 font-semibold">Manage grooming sessions and staff</p>
           </div>
           <div className="flex flex-wrap gap-2 self-start sm:self-auto">
-            {isAdmin && (
-              <button
-                onClick={onViewHistory}
-                style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
-                className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-bold text-sm hover:border-[#7FC8A9] hover:text-[#3D7A5B] transition-all whitespace-nowrap"
-              >
-                View History
-              </button>
-            )}
+            <button
+              onClick={onViewHistory}
+              style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
+              className="flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-bold text-sm hover:border-[#905f4d] hover:text-[#6B3F2F] transition-all whitespace-nowrap"
+            >
+              View History
+            </button>
             <button
               onClick={onAddBooking}
               style={{ backgroundColor: "#F6C453", color: "#3D4A43" }}
@@ -502,7 +505,7 @@ function Dashboard({
               <button
                 onClick={onManageStaff}
                 style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
-                className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#7FC8A9] hover:text-[#3D7A5B] transition-colors whitespace-nowrap"
+                className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#905f4d] hover:text-[#6B3F2F] transition-colors whitespace-nowrap"
               >
                 Manage Staff
               </button>
@@ -526,7 +529,7 @@ function Dashboard({
                     Busy · {s.busyWith}
                   </span>
                 ) : (
-                  <span style={{ backgroundColor: "#E8F7F1", color: "#4B9A74", border: "1.5px solid #7FC8A9" }} className="text-xs font-bold px-2.5 py-1 rounded-full">
+                  <span style={{ backgroundColor: "#F5EDE8", color: "#905f4d", border: "1.5px solid #905f4d" }} className="text-xs font-bold px-2.5 py-1 rounded-full">
                     Available
                   </span>
                 )}
@@ -588,7 +591,7 @@ function Dashboard({
                     <div className="flex gap-2">
                       <button
                         onClick={() => onCheckin(b)}
-                        style={{ backgroundColor: "#7FC8A9", color: "#fff" }}
+                        style={{ backgroundColor: "#905f4d", color: "#fff" }}
                         className="flex-1 py-2.5 rounded-full font-bold text-sm hover:opacity-90 active:scale-95 transition-all shadow-sm"
                       >
                         Check-in
@@ -669,7 +672,7 @@ function Dashboard({
                   <div className="flex items-center gap-2">
                     {b.status === "Waiting" ? (
                       <>
-                        <button onClick={() => onCheckin(b)} style={{ backgroundColor: "#7FC8A9", color: "#fff" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:opacity-90 active:scale-95 transition-all whitespace-nowrap shadow-sm">Check-in</button>
+                        <button onClick={() => onCheckin(b)} style={{ backgroundColor: "#905f4d", color: "#fff" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:opacity-90 active:scale-95 transition-all whitespace-nowrap shadow-sm">Check-in</button>
                         <button onClick={() => onEditBooking(b)} style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#F6C453] hover:text-[#3D4A43] transition-all whitespace-nowrap">Edit</button>
                         {isAdmin && (
                           <button onClick={() => onDeleteBooking(b)} style={{ border: "1.5px solid #FECACA", color: "#B91C1C" }} className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#B91C1C] transition-all whitespace-nowrap">Delete</button>
@@ -704,7 +707,7 @@ function Dashboard({
               <button
                 onClick={() => onChangeWeek(weekOffset - 1)}
                 style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold hover:border-[#7FC8A9] hover:text-[#3D7A5B] transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold hover:border-[#905f4d] hover:text-[#6B3F2F] transition-colors"
               >
                 ‹
               </button>
@@ -714,7 +717,7 @@ function Dashboard({
               <button
                 onClick={() => onChangeWeek(weekOffset + 1)}
                 style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold hover:border-[#7FC8A9] hover:text-[#3D7A5B] transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold hover:border-[#905f4d] hover:text-[#6B3F2F] transition-colors"
               >
                 ›
               </button>
@@ -722,7 +725,7 @@ function Dashboard({
                 <button
                   onClick={() => onChangeWeek(0)}
                   style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
-                  className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#7FC8A9] hover:text-[#3D7A5B] transition-colors whitespace-nowrap"
+                  className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#905f4d] hover:text-[#6B3F2F] transition-colors whitespace-nowrap"
                 >
                   Today
                 </button>
@@ -738,12 +741,12 @@ function Dashboard({
                 <div key={date} style={{ backgroundColor: "#fff", border: "1px solid #E8E3DA" }} className="rounded-2xl shadow-sm overflow-hidden">
                   <div
                     style={{
-                      backgroundColor: date === todayISO() ? "#E8F7F1" : "#FAFAF8",
+                      backgroundColor: date === todayISO() ? "#F5EDE8" : "#FAFAF8",
                       borderBottom: "1px solid #E8E3DA",
                     }}
                     className="px-4 py-3 flex items-center justify-between"
                   >
-                    <span style={{ color: date === todayISO() ? "#3D7A5B" : "#3D4A43" }} className="font-extrabold text-sm">
+                    <span style={{ color: date === todayISO() ? "#6B3F2F" : "#3D4A43" }} className="font-extrabold text-sm">
                       {formatDayHeader(date)}
                     </span>
                     <span style={{ color: "#6B7A72" }} className="text-xs font-bold">{dayBookings.length} booking{dayBookings.length !== 1 ? "s" : ""}</span>
@@ -795,15 +798,15 @@ function Dashboard({
               const dayBookings = weekBookings.filter((b) => b.date === date);
               const isToday = date === todayISO();
               return (
-                <div key={date} style={{ backgroundColor: "#fff", border: isToday ? "2px solid #7FC8A9" : "1px solid #E8E3DA" }} className="rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                <div key={date} style={{ backgroundColor: "#fff", border: isToday ? "2px solid #905f4d" : "1px solid #E8E3DA" }} className="rounded-2xl shadow-sm overflow-hidden flex flex-col">
                   <div
-                    style={{ backgroundColor: isToday ? "#E8F7F1" : "#FAFAF8", borderBottom: "1px solid #E8E3DA" }}
+                    style={{ backgroundColor: isToday ? "#F5EDE8" : "#FAFAF8", borderBottom: "1px solid #E8E3DA" }}
                     className="px-3 py-2.5 text-center"
                   >
-                    <div style={{ color: isToday ? "#3D7A5B" : "#3D4A43" }} className="font-extrabold text-xs">
+                    <div style={{ color: isToday ? "#6B3F2F" : "#3D4A43" }} className="font-extrabold text-xs">
                       {new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()}
                     </div>
-                    <div style={{ color: isToday ? "#3D7A5B" : "#6B7A72" }} className="font-bold text-lg">
+                    <div style={{ color: isToday ? "#6B3F2F" : "#6B7A72" }} className="font-bold text-lg">
                       {new Date(date + "T00:00:00").getDate()}
                     </div>
                   </div>
@@ -849,7 +852,7 @@ function AddBookingScreen({
   onConfirm,
 }: {
   onBack: () => void;
-  onConfirm: (petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string) => void;
+  onConfirm: (petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string, breed: string) => void;
 }) {
   const [petName, setPetName] = useState("");
   const [petType, setPetType] = useState<PetType>("Dog");
@@ -860,6 +863,7 @@ function AddBookingScreen({
   const [size, setSize] = useState("");
   const [qty, setQty] = useState(1);
   const [serviceType, setServiceType] = useState("");
+  const [breed, setBreed] = useState("");
   const [timeError, setTimeError] = useState<string | null>(null);
 
   const petTypes: PetType[] = ["Dog", "Cat", "Rabbit", "Other"];
@@ -872,7 +876,7 @@ function AddBookingScreen({
       setTimeError("End time must be after start time");
       return;
     }
-    onConfirm(petName.trim(), petType, date, timeRange, phone.trim(), size.trim(), qty, serviceType.trim());
+    onConfirm(petName.trim(), petType, date, timeRange, phone.trim(), size.trim(), qty, serviceType.trim(), breed.trim());
   };
 
   return (
@@ -894,7 +898,7 @@ function AddBookingScreen({
         <div style={{ backgroundColor: "#fff", border: "1px solid #E8E3DA" }} className="rounded-2xl shadow-sm p-5 sm:p-8">
           {/* Header */}
           <div className="flex items-center gap-3 mb-2">
-            <div style={{ backgroundColor: "#7FC8A9" }} className="w-10 h-10 rounded-xl flex items-center justify-center text-white">
+            <div style={{ backgroundColor: "#905f4d" }} className="w-10 h-10 rounded-xl flex items-center justify-center text-white">
               <PawIcon size={22} />
             </div>
             <h1 style={{ color: "#3D4A43" }} className="text-xl sm:text-2xl font-extrabold tracking-tight">Add New Booking</h1>
@@ -910,7 +914,20 @@ function AddBookingScreen({
               value={petName}
               onChange={(e) => setPetName(e.target.value)}
               style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
+            />
+          </div>
+
+          {/* Breed */}
+          <div className="mb-6">
+            <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Breed</label>
+            <input
+              type="text"
+              placeholder="e.g. Golden Retriever, Persian"
+              value={breed}
+              onChange={(e) => setBreed(e.target.value)}
+              style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
             />
           </div>
 
@@ -923,7 +940,7 @@ function AddBookingScreen({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
             />
           </div>
 
@@ -938,18 +955,18 @@ function AddBookingScreen({
                     key={t}
                     onClick={() => setPetType(t)}
                     style={{
-                      backgroundColor: selected ? "#E8F7F1" : "#FAFAF8",
-                      border: selected ? "2px solid #7FC8A9" : "1.5px solid #E8E3DA",
-                      color: selected ? "#3D7A5B" : "#6B7A72",
+                      backgroundColor: selected ? "#F5EDE8" : "#FAFAF8",
+                      border: selected ? "2px solid #905f4d" : "1.5px solid #E8E3DA",
+                      color: selected ? "#6B3F2F" : "#6B7A72",
                     }}
-                    className="relative flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:border-[#7FC8A9]"
+                    className="relative flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:border-[#905f4d]"
                   >
                     {selected && (
-                      <div style={{ backgroundColor: "#7FC8A9" }} className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center">
+                      <div style={{ backgroundColor: "#905f4d" }} className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center">
                         <CheckIcon size={10} className="text-white" />
                       </div>
                     )}
-                    <div style={{ backgroundColor: selected ? "#7FC8A9" : petColor(t), opacity: selected ? 1 : 0.8 }} className="w-10 h-10 rounded-full flex items-center justify-center text-white">
+                    <div style={{ backgroundColor: selected ? "#905f4d" : petColor(t), opacity: selected ? 1 : 0.8 }} className="w-10 h-10 rounded-full flex items-center justify-center text-white">
                       <PetIcon type={t} size={22} />
                     </div>
                     <span className="text-xs font-bold">{t}</span>
@@ -969,7 +986,7 @@ function AddBookingScreen({
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
               />
             </div>
             <div>
@@ -980,7 +997,7 @@ function AddBookingScreen({
                 value={qty}
                 onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors"
               />
             </div>
           </div>
@@ -994,7 +1011,7 @@ function AddBookingScreen({
               value={serviceType}
               onChange={(e) => setServiceType(e.target.value)}
               style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
             />
           </div>
 
@@ -1006,7 +1023,7 @@ function AddBookingScreen({
               value={date}
               onChange={(e) => setDate(e.target.value)}
               style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors cursor-pointer"
             />
           </div>
 
@@ -1025,7 +1042,7 @@ function AddBookingScreen({
                     setTimeError(null);
                   }}
                   style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors cursor-pointer"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors cursor-pointer"
                 />
               </div>
               <div>
@@ -1039,7 +1056,7 @@ function AddBookingScreen({
                     setTimeError(null);
                   }}
                   style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors cursor-pointer"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors cursor-pointer"
                 />
               </div>
             </div>
@@ -1062,7 +1079,7 @@ function AddBookingScreen({
             </button>
             <button
               onClick={handleConfirm}
-              style={{ backgroundColor: petName.trim() && date && timeRangeValid ? "#7FC8A9" : "#C8E8DA", color: "#fff" }}
+              style={{ backgroundColor: petName.trim() && date && timeRangeValid ? "#905f4d" : "#D4B8AD", color: "#fff" }}
               className="flex-2 flex-grow py-3 rounded-full font-bold text-sm transition-all active:scale-95 shadow-sm disabled:cursor-not-allowed"
               disabled={!petName.trim() || !date || !timeRangeValid}
             >
@@ -1084,7 +1101,7 @@ function EditBookingScreen({
 }: {
   booking: Booking;
   onBack: () => void;
-  onConfirm: (id: number, petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string) => void;
+  onConfirm: (id: number, petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string, breed: string) => void;
 }) {
   const [petName, setPetName] = useState(booking.petName);
   const [petType, setPetType] = useState<PetType>(booking.petType);
@@ -1111,6 +1128,7 @@ function EditBookingScreen({
   const [size, setSize] = useState(booking.size ?? "");
   const [qty, setQty] = useState(booking.qty ?? 1);
   const [serviceType, setServiceType] = useState(booking.serviceType ?? "");
+  const [breed, setBreed] = useState(booking.breed ?? "");
   const [timeError, setTimeError] = useState<string | null>(null);
 
   const petTypes: PetType[] = ["Dog", "Cat", "Rabbit", "Other"];
@@ -1123,7 +1141,7 @@ function EditBookingScreen({
       setTimeError("End time must be after start time");
       return;
     }
-    onConfirm(booking.id, petName.trim(), petType, date, timeRange, phone.trim(), size.trim(), qty, serviceType.trim());
+    onConfirm(booking.id, petName.trim(), petType, date, timeRange, phone.trim(), size.trim(), qty, serviceType.trim(), breed.trim());
   };
 
   return (
@@ -1158,7 +1176,20 @@ function EditBookingScreen({
               value={petName}
               onChange={(e) => setPetName(e.target.value)}
               style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
+            />
+          </div>
+
+          {/* Breed */}
+          <div className="mb-6">
+            <label style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">Breed</label>
+            <input
+              type="text"
+              placeholder="e.g. Golden Retriever, Persian"
+              value={breed}
+              onChange={(e) => setBreed(e.target.value)}
+              style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
             />
           </div>
 
@@ -1170,7 +1201,7 @@ function EditBookingScreen({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
             />
           </div>
 
@@ -1184,18 +1215,18 @@ function EditBookingScreen({
                     key={t}
                     onClick={() => setPetType(t)}
                     style={{
-                      backgroundColor: selected ? "#E8F7F1" : "#FAFAF8",
-                      border: selected ? "2px solid #7FC8A9" : "1.5px solid #E8E3DA",
-                      color: selected ? "#3D7A5B" : "#6B7A72",
+                      backgroundColor: selected ? "#F5EDE8" : "#FAFAF8",
+                      border: selected ? "2px solid #905f4d" : "1.5px solid #E8E3DA",
+                      color: selected ? "#6B3F2F" : "#6B7A72",
                     }}
-                    className="relative flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:border-[#7FC8A9]"
+                    className="relative flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:border-[#905f4d]"
                   >
                     {selected && (
-                      <div style={{ backgroundColor: "#7FC8A9" }} className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center">
+                      <div style={{ backgroundColor: "#905f4d" }} className="absolute top-2 right-2 w-4 h-4 rounded-full flex items-center justify-center">
                         <CheckIcon size={10} className="text-white" />
                       </div>
                     )}
-                    <div style={{ backgroundColor: selected ? "#7FC8A9" : petColor(t), opacity: selected ? 1 : 0.8 }} className="w-10 h-10 rounded-full flex items-center justify-center text-white">
+                    <div style={{ backgroundColor: selected ? "#905f4d" : petColor(t), opacity: selected ? 1 : 0.8 }} className="w-10 h-10 rounded-full flex items-center justify-center text-white">
                       <PetIcon type={t} size={22} />
                     </div>
                     <span className="text-xs font-bold">{t}</span>
@@ -1215,7 +1246,7 @@ function EditBookingScreen({
                 value={size}
                 onChange={(e) => setSize(e.target.value)}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
               />
             </div>
             <div>
@@ -1226,7 +1257,7 @@ function EditBookingScreen({
                 value={qty}
                 onChange={(e) => setQty(Math.max(1, Number(e.target.value)))}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors"
               />
             </div>
           </div>
@@ -1240,7 +1271,7 @@ function EditBookingScreen({
               value={serviceType}
               onChange={(e) => setServiceType(e.target.value)}
               style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
             />
           </div>
 
@@ -1251,7 +1282,7 @@ function EditBookingScreen({
               value={date}
               onChange={(e) => setDate(e.target.value)}
               style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors cursor-pointer"
+              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors cursor-pointer"
             />
           </div>
 
@@ -1269,7 +1300,7 @@ function EditBookingScreen({
                     setTimeError(null);
                   }}
                   style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors cursor-pointer"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors cursor-pointer"
                 />
               </div>
               <div>
@@ -1283,7 +1314,7 @@ function EditBookingScreen({
                     setTimeError(null);
                   }}
                   style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors cursor-pointer"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors cursor-pointer"
                 />
               </div>
             </div>
@@ -1458,7 +1489,7 @@ function ManageStaffScreen({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
               />
             </div>
             <div>
@@ -1468,7 +1499,7 @@ function ManageStaffScreen({
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors appearance-none cursor-pointer"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors appearance-none cursor-pointer"
               >
                 {STAFF_ROLES.map((option) => (
                   <option key={option} value={option}>{option}</option>
@@ -1485,7 +1516,7 @@ function ManageStaffScreen({
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
               />
             </div>
             <div>
@@ -1498,14 +1529,14 @@ function ManageStaffScreen({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
               />
             </div>
           </div>
           <button
             onClick={() => void handleCreate()}
             disabled={!name.trim() || !username.trim() || !password || saving}
-            style={{ backgroundColor: name.trim() && username.trim() && password && !saving ? "#7FC8A9" : "#C8E8DA", color: "#fff" }}
+            style={{ backgroundColor: name.trim() && username.trim() && password && !saving ? "#905f4d" : "#D4B8AD", color: "#fff" }}
             className="px-5 py-3 rounded-full font-bold text-sm shadow-sm transition-all active:scale-95 disabled:cursor-not-allowed whitespace-nowrap"
           >
             Add Staff
@@ -1542,7 +1573,7 @@ function ManageStaffScreen({
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors"
+                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors"
                           />
                         </div>
                         <div>
@@ -1551,7 +1582,7 @@ function ManageStaffScreen({
                             value={editRole}
                             onChange={(e) => setEditRole(e.target.value)}
                             style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors appearance-none cursor-pointer"
+                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors appearance-none cursor-pointer"
                           >
                             {STAFF_ROLES.map((option) => (
                               <option key={option} value={option}>{option}</option>
@@ -1569,7 +1600,7 @@ function ManageStaffScreen({
                             value={editUsername}
                             onChange={(e) => setEditUsername(e.target.value)}
                             style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors"
+                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors"
                           />
                         </div>
                         <div>
@@ -1581,14 +1612,14 @@ function ManageStaffScreen({
                             value={editPassword}
                             onChange={(e) => setEditPassword(e.target.value)}
                             style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors placeholder:text-[#C0C8C2]"
+                            className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors placeholder:text-[#C0C8C2]"
                           />
                         </div>
                         <div className="sm:col-span-2 flex gap-2">
                           <button
                             onClick={() => void handleSaveEdit(member.id)}
                             disabled={!editName.trim() || !editRole.trim() || !editUsername.trim() || saving}
-                            style={{ backgroundColor: "#7FC8A9", color: "#fff" }}
+                            style={{ backgroundColor: "#905f4d", color: "#fff" }}
                             className="px-4 py-3 rounded-full font-bold text-sm shadow-sm disabled:opacity-60"
                           >
                             Save
@@ -1618,14 +1649,14 @@ function ManageStaffScreen({
                               Busy · {member.busyWith}
                             </span>
                           ) : (
-                            <span style={{ backgroundColor: "#E8F7F1", color: "#4B9A74", border: "1.5px solid #7FC8A9" }} className="text-xs font-bold px-2.5 py-1 rounded-full">
+                            <span style={{ backgroundColor: "#F5EDE8", color: "#905f4d", border: "1.5px solid #905f4d" }} className="text-xs font-bold px-2.5 py-1 rounded-full">
                               Available
                             </span>
                           )}
                           <button
                             onClick={() => startEdit(member)}
                             style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
-                            className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#7FC8A9] hover:text-[#3D7A5B] transition-colors"
+                            className="text-xs font-bold px-3 py-1.5 rounded-full hover:border-[#905f4d] hover:text-[#6B3F2F] transition-colors"
                           >
                             Edit
                           </button>
@@ -1655,9 +1686,11 @@ function ManageStaffScreen({
 
 function HistoryScreen({
   session,
+  isAdmin,
   onBack,
 }: {
   session: AuthSession;
+  isAdmin: boolean;
   onBack: () => void;
 }) {
   const now = new Date();
@@ -1668,24 +1701,34 @@ function HistoryScreen({
   const [monthlyHistory, setMonthlyHistory] = useState<SessionHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingAmountId, setEditingAmountId] = useState<number | null>(null);
+  const [editAmount, setEditAmount] = useState("");
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [records, monthlyRecords] = await Promise.all([
-        api.fetchHistory({
-          date: dateFilter || undefined,
-          staffId: session.role === "staff" ? session.staffId : undefined,
-        }),
-        api.fetchHistory({
-          month,
-          year,
-          staffId: session.role === "staff" ? session.staffId : undefined,
-        }),
-      ]);
-      setHistory(records);
-      setMonthlyHistory(monthlyRecords);
+      if (session.role === "staff") {
+        const today = todayISO();
+        const records = await api.fetchHistory({
+          date: today,
+          staffId: session.staffId,
+        });
+        setHistory(records);
+        setMonthlyHistory(records);
+      } else {
+        const [records, monthlyRecords] = await Promise.all([
+          api.fetchHistory({
+            date: dateFilter || undefined,
+          }),
+          api.fetchHistory({
+            month,
+            year,
+          }),
+        ]);
+        setHistory(records);
+        setMonthlyHistory(monthlyRecords);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load history");
     } finally {
@@ -1710,6 +1753,23 @@ function HistoryScreen({
     else { setMonth(month + 1); }
   };
 
+  const startEditAmount = (record: SessionHistory) => {
+    setEditingAmountId(record.id);
+    setEditAmount(String(record.amount));
+  };
+
+  const saveAmount = async (id: number) => {
+    const parsed = parseFloat(editAmount);
+    if (Number.isNaN(parsed) || parsed < 0) return;
+    try {
+      await api.updateHistoryAmount(id, parsed);
+      setEditingAmountId(null);
+      await loadHistory();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update amount");
+    }
+  };
+
   return (
     <div className="min-h-full">
       <header style={{ backgroundColor: "#fff", borderBottom: "1px solid #E8E3DA" }} className="sticky top-0 z-10 px-6 py-4">
@@ -1727,34 +1787,39 @@ function HistoryScreen({
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6 sm:mb-8">
           <div>
-            <h1 style={{ color: "#3D4A43" }} className="text-2xl sm:text-3xl font-extrabold tracking-tight">Check-in / Check-out History</h1>
+            <h1 style={{ color: "#3D4A43" }} className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+              {session.role === "staff" ? "Today's History" : "Check-in / Check-out History"}
+            </h1>
             <p style={{ color: "#6B7A72" }} className="text-xs sm:text-sm mt-0.5 font-semibold">
-              {session.role === "staff" ? "Your completed grooming sessions" : "All completed grooming sessions"}
+              {session.role === "staff" ? "Your completed sessions today" : "All completed grooming sessions"}
             </p>
           </div>
-          <div className="sm:w-52">
-            <label htmlFor="history-date-filter" style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">
-              Filter by Date
-            </label>
-            <input
-              id="history-date-filter"
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
-              className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#7FC8A9] transition-colors cursor-pointer"
-            />
-          </div>
+          {isAdmin && (
+            <div className="sm:w-52">
+              <label htmlFor="history-date-filter" style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="block text-xs font-extrabold uppercase mb-2">
+                Filter by Date
+              </label>
+              <input
+                id="history-date-filter"
+                type="date"
+                value={dateFilter}
+                onChange={(e) => setDateFilter(e.target.value)}
+                style={{ border: "1.5px solid #E8E3DA", color: "#3D4A43", backgroundColor: "#FAFAF8" }}
+                className="w-full px-4 py-3 rounded-xl text-sm font-semibold outline-none focus:border-[#905f4d] transition-colors cursor-pointer"
+              />
+            </div>
+          )}
         </div>
 
         {/* Monthly Income Summary */}
+        {isAdmin && (
         <div style={{ backgroundColor: "#fff", border: "1px solid #E8E3DA" }} className="rounded-2xl shadow-sm p-5 sm:p-6 mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-3">
               <button
                 onClick={handlePrevMonth}
                 style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold hover:border-[#7FC8A9] hover:text-[#3D7A5B] transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold hover:border-[#905f4d] hover:text-[#6B3F2F] transition-colors"
               >
                 ‹
               </button>
@@ -1764,7 +1829,7 @@ function HistoryScreen({
               <button
                 onClick={handleNextMonth}
                 style={{ border: "1.5px solid #E8E3DA", color: "#6B7A72" }}
-                className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold hover:border-[#7FC8A9] hover:text-[#3D7A5B] transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-sm font-bold hover:border-[#905f4d] hover:text-[#6B3F2F] transition-colors"
               >
                 ›
               </button>
@@ -1772,15 +1837,16 @@ function HistoryScreen({
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <div style={{ color: "#6B7A72", letterSpacing: "0.08em" }} className="text-xs font-extrabold uppercase mb-1">Monthly Income</div>
-                <div style={{ color: "#4B9A74" }} className="text-2xl sm:text-3xl font-extrabold">{monthlyTotal.toLocaleString()} Ks</div>
+                <div style={{ color: "#905f4d" }} className="text-2xl sm:text-3xl font-extrabold">{monthlyTotal.toLocaleString()} Ks</div>
               </div>
-              <div style={{ backgroundColor: "#E8F7F1", border: "1px solid #7FC8A9" }} className="rounded-xl px-4 py-2.5 text-center">
-                <div style={{ color: "#3D7A5B" }} className="text-lg sm:text-xl font-extrabold">{monthlyHistory.length}</div>
+              <div style={{ backgroundColor: "#F5EDE8", border: "1px solid #905f4d" }} className="rounded-xl px-4 py-2.5 text-center">
+                <div style={{ color: "#6B3F2F" }} className="text-lg sm:text-xl font-extrabold">{monthlyHistory.length}</div>
                 <div style={{ color: "#6B7A72" }} className="text-[10px] sm:text-xs font-bold uppercase">Sessions</div>
               </div>
             </div>
           </div>
         </div>
+        )}
 
         {error && (
           <p style={{ color: "#B91C1C", backgroundColor: "#FEF2F2", border: "1px solid #FECACA" }} className="mb-4 rounded-xl px-4 py-3 text-sm font-semibold">
@@ -1806,9 +1872,28 @@ function HistoryScreen({
                       <div style={{ color: "#3D4A43" }} className="font-extrabold text-base truncate">{record.petName}</div>
                       <div style={{ color: "#6B7A72" }} className="text-xs font-semibold">{record.petType}</div>
                     </div>
-                    <span style={{ backgroundColor: "#E8F7F1", color: "#4B9A74", border: "1.5px solid #7FC8A9" }} className="text-xs font-bold px-2.5 py-1 rounded-full">
-                      {record.amount.toLocaleString()} Ks
-                    </span>
+                    {editingAmountId === record.id ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          value={editAmount}
+                          onChange={(e) => setEditAmount(e.target.value)}
+                          className="w-24 px-2 py-1 rounded-lg text-xs font-bold border border-[#905f4d] outline-none"
+                          style={{ color: "#3D4A43" }}
+                          autoFocus
+                        />
+                        <button onClick={() => void saveAmount(record.id)} style={{ backgroundColor: "#905f4d", color: "#fff" }} className="px-2 py-1 rounded-lg text-xs font-bold">OK</button>
+                        <button onClick={() => setEditingAmountId(null)} style={{ color: "#6B7A72" }} className="px-2 py-1 text-xs font-bold">✕</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={isAdmin ? () => startEditAmount(record) : undefined}
+                        style={{ backgroundColor: "#F5EDE8", color: "#905f4d", border: "1.5px solid #905f4d", cursor: isAdmin ? "pointer" : "default" }}
+                        className="text-xs font-bold px-2.5 py-1 rounded-full"
+                      >
+                        {record.amount.toLocaleString()} Ks
+                      </button>
+                    )}
                   </div>
                   <div style={{ borderTop: "1px solid #F0EDE6" }} className="pt-3 flex flex-col gap-1.5 text-xs font-semibold">
                     <div style={{ color: "#6B7A72" }}>Scheduled: {formatDisplayDate(record.date)} · {record.timeRange}</div>
@@ -1854,7 +1939,28 @@ function HistoryScreen({
                   <span style={{ color: record.staffName ? "#3D4A43" : "#B0B8B3" }} className="text-sm font-semibold">
                     {record.staffName ?? "—"}
                   </span>
-                  <span style={{ color: "#4B9A74" }} className="text-sm font-extrabold">{record.amount.toLocaleString()} Ks</span>
+                  {editingAmountId === record.id ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        value={editAmount}
+                        onChange={(e) => setEditAmount(e.target.value)}
+                        className="w-24 px-2 py-1 rounded-lg text-xs font-bold border border-[#905f4d] outline-none"
+                        style={{ color: "#3D4A43" }}
+                        autoFocus
+                      />
+                      <button onClick={() => void saveAmount(record.id)} style={{ backgroundColor: "#905f4d", color: "#fff" }} className="px-2 py-1 rounded-lg text-xs font-bold">OK</button>
+                      <button onClick={() => setEditingAmountId(null)} style={{ color: "#6B7A72" }} className="px-2 py-1 text-xs font-bold">✕</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={isAdmin ? () => startEditAmount(record) : undefined}
+                      style={{ color: "#905f4d", cursor: isAdmin ? "pointer" : "default" }}
+                      className="text-sm font-extrabold hover:underline"
+                    >
+                      {record.amount.toLocaleString()} Ks
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1926,8 +2032,8 @@ function CheckinModal({
                   disabled={isBusy}
                   onClick={() => !isBusy && setSelectedStaff(s.id)}
                   style={{
-                    backgroundColor: isBusy ? "#F8F7F4" : isSelected ? "#E8F7F1" : "#FAFAF8",
-                    border: isSelected ? "2px solid #7FC8A9" : "1.5px solid #E8E3DA",
+                    backgroundColor: isBusy ? "#F8F7F4" : isSelected ? "#F5EDE8" : "#FAFAF8",
+                    border: isSelected ? "2px solid #905f4d" : "1.5px solid #E8E3DA",
                     opacity: isBusy ? 0.6 : 1,
                     cursor: isBusy ? "not-allowed" : "pointer",
                   }}
@@ -1944,11 +2050,11 @@ function CheckinModal({
                     {isBusy ? (
                       <span style={{ color: "#C49430" }} className="text-xs font-bold">Busy with {s.busyWith}</span>
                     ) : isSelected ? (
-                      <div style={{ backgroundColor: "#7FC8A9" }} className="w-5 h-5 rounded-full flex items-center justify-center">
+                      <div style={{ backgroundColor: "#905f4d" }} className="w-5 h-5 rounded-full flex items-center justify-center">
                         <CheckIcon size={11} className="text-white" />
                       </div>
                     ) : (
-                      <span style={{ color: "#4B9A74" }} className="text-xs font-bold">Available</span>
+                      <span style={{ color: "#905f4d" }} className="text-xs font-bold">Available</span>
                     )}
                   </div>
                 </button>
@@ -1960,7 +2066,7 @@ function CheckinModal({
         <button
           onClick={handleStart}
           disabled={selectedStaff === null}
-          style={{ backgroundColor: selectedStaff !== null ? "#7FC8A9" : "#C8E8DA", color: "#fff" }}
+          style={{ backgroundColor: selectedStaff !== null ? "#905f4d" : "#D4B8AD", color: "#fff" }}
           className="w-full py-3.5 rounded-full font-extrabold text-sm shadow-sm transition-all active:scale-95 disabled:cursor-not-allowed"
         >
           Start Spa
@@ -2084,7 +2190,7 @@ export default function App() {
   }, [weekOffset]);
 
   useEffect(() => {
-    if (session && !isAdmin && (screen === "manage-staff" || screen === "history")) {
+    if (session && !isAdmin && screen === "manage-staff") {
       setScreen("dashboard");
     }
   }, [session, isAdmin, screen]);
@@ -2177,9 +2283,9 @@ export default function App() {
     }
   };
 
-  const handleAddBooking = async (petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string) => {
+  const handleAddBooking = async (petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string, breed: string) => {
     try {
-      await api.createBooking({ petName, petType, phone, date, timeRange, createdBy: session?.name ?? "Unknown", size, qty, serviceType });
+      await api.createBooking({ petName, petType, phone, date, timeRange, createdBy: session?.name ?? "Unknown", size, qty, serviceType, breed });
       await loadData();
       setScreen("dashboard");
     } catch (err) {
@@ -2187,9 +2293,9 @@ export default function App() {
     }
   };
 
-  const handleUpdateBooking = async (id: number, petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string) => {
+  const handleUpdateBooking = async (id: number, petName: string, petType: PetType, date: string, timeRange: string, phone: string, size: string, qty: number, serviceType: string, breed: string) => {
     try {
-      await api.updateBooking(id, { petName, petType, phone, date, timeRange, size, qty, serviceType });
+      await api.updateBooking(id, { petName, petType, phone, date, timeRange, size, qty, serviceType, breed });
       await loadData();
       setEditingBooking(null);
       setScreen("dashboard");
@@ -2274,9 +2380,10 @@ export default function App() {
         />
       )}
 
-      {screen === "history" && isAdmin && session && (
+      {screen === "history" && session && (
         <HistoryScreen
           session={session}
+          isAdmin={isAdmin}
           onBack={() => setScreen("dashboard")}
         />
       )}

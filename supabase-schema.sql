@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS bookings (
   created_by TEXT,
   size TEXT,
   qty INTEGER,
-  service_type TEXT
+  service_type TEXT,
+  breed TEXT
 );
 
 CREATE TABLE IF NOT EXISTS session_history (
@@ -68,7 +69,10 @@ DECLARE
   v_booking RECORD;
   v_staff RECORD;
   v_result JSONB;
+  v_myanmar_time TEXT;
 BEGIN
+  v_myanmar_time := (now() + interval '6 hours 30 minutes')::text;
+
   SELECT id, pet_name INTO v_booking FROM bookings WHERE id = p_booking_id;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'Booking not found';
@@ -84,7 +88,7 @@ BEGIN
   END IF;
 
   UPDATE bookings
-  SET status = 'In-Progress', staff_id = p_staff_id, checked_in_at = now()::text
+  SET status = 'In-Progress', staff_id = p_staff_id, checked_in_at = v_myanmar_time
   WHERE id = p_booking_id;
 
   UPDATE staff
@@ -110,7 +114,7 @@ DECLARE
   v_booking RECORD;
   v_checked_out_at TEXT;
 BEGIN
-  v_checked_out_at := now()::text;
+  v_checked_out_at := (now() + interval '6 hours 30 minutes')::text;
 
   SELECT b.id, b.pet_name, b.pet_type, b.phone, b.date, b.time_range,
          b.staff_id, b.checked_in_at, s.name AS staff_name

@@ -72,6 +72,7 @@ export function createBooking(input: {
   size: string;
   qty: number;
   serviceType: string;
+  breed: string;
 }) {
   return request<Booking>("/api/bookings", {
     method: "POST",
@@ -81,7 +82,7 @@ export function createBooking(input: {
 
 export function updateBooking(
   id: number,
-  input: { petName: string; petType: PetType; phone: string; date: string; timeRange: string; size: string; qty: number; serviceType: string },
+  input: { petName: string; petType: PetType; phone: string; date: string; timeRange: string; size: string; qty: number; serviceType: string; breed: string },
 ) {
   return request<Booking>(`/api/bookings/${id}`, {
     method: "PATCH",
@@ -99,6 +100,13 @@ export function checkInBooking(bookingId: number, staffId: number) {
 export function checkoutBooking(bookingId: number, amount: number) {
   return request<{ ok: true; amount: number }>(`/api/bookings/${bookingId}/checkout`, {
     method: "POST",
+    body: JSON.stringify({ amount }),
+  });
+}
+
+export function updateHistoryAmount(id: number, amount: number) {
+  return request<{ ok: true }>(`/api/history/${id}`, {
+    method: "PATCH",
     body: JSON.stringify({ amount }),
   });
 }

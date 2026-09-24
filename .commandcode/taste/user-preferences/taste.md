@@ -11,9 +11,17 @@
 - Full-stack features follow a bottom-up order: server route → API client → UI component → wiring/routing. Confidence: 0.75
 - Communicates UI/visual changes by sharing screenshots or images alongside brief text instructions (e.g. "this is logo so that change logo in nav bar") rather than describing visuals in words. Confidence: 0.8
 - App uses Myanmar Kyats ("Ks") as the currency symbol, not USD. Use `.toLocaleString()` for formatting (no decimals needed for Kyats). Confidence: 0.95
+- App uses Yangon time (GMT+6:30) for all booking timestamps and date logic — `todayISO()`, `getWeekDates()`, Supabase RPC `now()` must all be offset to Myanmar time. Confidence: 0.95
 - Deploys the app to Vercel (hosted at fufupetspa.vercel.app). Confidence: 0.9
 - Prefers the agent to execute deployment/infrastructure tasks directly (e.g., applying database schemas to Supabase, configuring env files) rather than providing manual step-by-step instructions. Will ignore questions asking for manual intervention and instead report the resulting error, expecting the agent to solve it end-to-end. Confidence: 0.9
 - Reports runtime errors by pasting raw browser console output (with stack traces and minified filenames) and zero additional context or explanation — expects the agent to diagnose and fix from the raw dump alone. Confidence: 0.8
 - Sometimes pastes external AI-generated solutions or advice alongside error reports — expects this agent to critically evaluate the advice and reject it if it conflicts with the project's architecture, rather than blindly applying it. Confidence: 0.75
 - Security-conscious: no credential hints or default passwords should be visible in the UI (e.g., login page). When changing credentials, remove all traces of old/default values from user-facing surfaces. Confidence: 0.8
 - Enforces role-based permissions: destructive actions (e.g., delete booking) are restricted to admin only, while staff can perform standard actions (check-in, checkout, edit). Wants admin-only buttons conditionally rendered in both desktop and mobile views. Confidence: 0.85
+- Uses Supabase Postgres with the JS client library, preferring `.rpc()` for atomic multi-table operations (check-in, checkout) over sequential Supabase calls. Confidence: 0.85
+- When deploying to Vercel with serverless functions, prefers a single self-contained API handler (`api/index.ts`) with all server logic inlined (no external file imports) to avoid Vercel bundler resolution issues. Confidence: 0.8
+- When adding new data fields, follows a consistent full-stack migration pattern across 6+ files: types.ts → api/client.ts → App.tsx (forms + handlers) → api/index.ts → server/routes.ts → supabase-schema.sql, plus an ALTER TABLE SQL for the existing database. Confidence: 0.9
+- Likes to add provenance/audit fields to entities (e.g., `created_by` on bookings to track who created it) and extra descriptive fields (size, qty, breed, service type). Confidence: 0.8
+- Staff roles are customized: "Basic training", "Basic", "Groomer", "Head Groomer". Confidence: 0.95
+- Provides negative feedback by giving a short follow-up instruction (e.g., "also remove this", "an also remove") rather than saying "that's wrong". Confidence: 0.7
+- Prefers a warm brown/earth-tone color palette: primary `#905f4d`, dark `#6B3F2F`, light background `#F5EDE8`, disabled `#D4B8AD`. Moved away from a previous green theme. Confidence: 0.85

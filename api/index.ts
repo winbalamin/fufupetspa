@@ -28,6 +28,7 @@ interface Booking {
   size: string | null;
   qty: number | null;
   serviceType: string | null;
+  breed: string | null;
 }
 interface AuthSession {
   role: UserRole;
@@ -94,13 +95,16 @@ function mapStaff(row: any): Staff {
   return { id: row.id, name: row.name, role: row.role, busyWith: row.busy_with, username: row.username };
 }
 function mapBooking(row: any): Booking {
-  return { id: row.id, petName: row.pet_name, petType: row.pet_type, phone: row.phone, date: row.date, timeRange: row.time_range, staffId: row.staff_id, status: row.status, createdBy: row.created_by ?? null, size: row.size ?? null, qty: row.qty ?? null, serviceType: row.service_type ?? null };
+  return { id: row.id, petName: row.pet_name, petType: row.pet_type, phone: row.phone, date: row.date, timeRange: row.time_range, staffId: row.staff_id, status: row.status, createdBy: row.created_by ?? null, size: row.size ?? null, qty: row.qty ?? null, serviceType: row.service_type ?? null, breed: row.breed ?? null };
 }
 function mapSessionHistory(row: any): SessionHistory {
   return { id: row.id, petName: row.pet_name, petType: row.pet_type, phone: row.phone, date: row.date, timeRange: row.time_range, staffId: row.staff_id, staffName: row.staff_name, checkedInAt: row.checked_in_at, checkedOutAt: row.checked_out_at, amount: row.amount };
 }
 function todayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const myanmar = new Date(utc + 6.5 * 60 * 60000);
+  return myanmar.toISOString().slice(0, 10);
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────
@@ -193,7 +197,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const startDate = url.searchParams.get("startDate");
       const endDate = url.searchParams.get("endDate");
       const date = url.searchParams.get("date");
-      let query = db.from("bookings").select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type");
+      let query = db.from("bookings").select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type, breed");
       if (startDate && endDate) {
         query = query.gte("date", startDate).lte("date", endDate).order("date").order("id");
       } else {
@@ -211,8 +215,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: inserted, error: insertErr } = await db.from("bookings").insert({
         pet_name: body.petName.trim(), pet_type: body.petType, phone: body.phone?.trim() ?? "",
         date: body.date, time_range: body.timeRange, staff_id: null, status: "Waiting",
-        created_by: body.createdBy ?? null, size: body.size ?? null, qty: body.qty ?? null, service_type: body.serviceType ?? null,
-      }).select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type").single();
+        created_by: body.createdBy ?? null, size: body.size ?? null, qty: body.qty ?? null, service_type: body.serviceType ?? null, breed: body.breed ?? null,
+      }).select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type, breed").single();
       if (insertErr) throw new Error(insertErr.message);
       return res.status(201).json(mapBooking(inserted));
     }
@@ -228,9 +232,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!body?.petName?.trim() || !body?.petType || !body?.date || !body?.timeRange) return res.status(400).json({ error: "Missing required booking fields" });
       await db.from("bookings").update({
         pet_name: body.petName.trim(), pet_type: body.petType, phone: body.phone?.trim() ?? "",
-        date: body.date, time_range: body.timeRange, size: body.size ?? null, qty: body.qty ?? null, service_type: body.serviceType ?? null,
+        date: body.date, time_range: body.timeRange, size: body.size ?? null, qty: body.qty ?? null, service_type: body.serviceType ?? null, breed: body.breed ?? null,
       }).eq("id", bookingId);
-      const { data: row } = await db.from("bookings").select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type").eq("id", bookingId).single();
+      const { data: row } = await db.from("bookings").select("id, pet_name, pet_type, phone, date, time_range, staff_id, status, created_by, size, qty, service_type, breed").eq("id", bookingId).single();
       return res.status(200).json(mapBooking(row));
     }
 
@@ -298,6 +302,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data, error } = await query;
       if (error) throw new Error(error.message);
       return res.status(200).json(data.map(mapSessionHistory));
+    }
+
+    // Update history amount (admin only)
+    const historyIdMatch = pathname.match(/^\/api\/history\/(\d+)$/);
+    if (method === "PATCH" && historyIdMatch) {
+      const historyId = Number(historyIdMatch[1]);
+      const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+      if (body?.amount === undefined || Number.isNaN(body.amount) || body.amount < 0) {
+        return res.status(400).json({ error: "Valid amount is required" });
+      }
+      const { error: updateErr } = await db.from("session_history").update({ amount: body.amount }).eq("id", historyId);
+      if (updateErr) throw new Error(updateErr.message);
+      return res.status(200).json({ ok: true });
     }
 
     return res.status(404).json({ error: "API route not found" });
